@@ -1,0 +1,76 @@
+body {
+    font-family: "Courier New", monospace;
+    background-color: #f9f9f1;
+    color: #333;
+    line-height: 1.8;
+    padding: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 18px;
+    font-weight: 300;
+    text-rendering: optimizeLegibility;
+    padding: 2px 7px 7px 7px;
+}
+
+header .header-icon-text {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+    margin: auto;
+}
+
+header .icon {
+    display: flex;
+    align-self: center;
+    width: 4rem;
+    height: 4rem;
+}
+
+header h1 {
+    font-size: 1.5em;
+    color: #1a1a1a;
+    padding-bottom: 10px;
+    white-space: nowrap;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-align: center;
+    font-family: Baskerville, cursive;
+    padding: 0px;
+    margin: 0px;
+    /* font-family: Palatino, "Palatino Linotype"; */
+}
+
+header p {
+    text-align: center;
+    word-break: normal;
+    white-space: normal;
+}
+
+header a {
+    text-decoration: underline;
+}
+
+a {
+    color: #2c3e50;
+    text-decoration: none;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+    font-weight: 400;
+}
+
+a:hover {
+    color: #e74c3c;
+}
+
+p a {
+    color: #2c3e50;
+    transition: color 0.3s ease;
+    font-weight: 200;
+}
+
+main h2 {
+    font-size: 2em;
+    color: #1a1a1a;
+    margin-top: 1em;
+}
