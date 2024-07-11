@@ -114,16 +114,14 @@ header .icon {
 }
 
 h1 {
-    font-size: 1.5em;
     color: #1a1a1a;
     padding-bottom: 10px;
     white-space: nowrap;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: -0.02em;
     text-align: center;
     padding: 0px;
     margin: 0px;
-    padding-top: 6px;
     font-family: Palatino;
 }
 
@@ -258,4 +256,8 @@ p a {
 }
 .bio a {
     text-decoration: underline;
+}
+
+.bio {
+    padding-top: 25px;
 }
