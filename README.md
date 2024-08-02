@@ -1,6 +1,4 @@
-# Jordan Cooper . dev Blog Site
+# Jordan Cooper
+Bored of the constant custom builds or new blogging platform that pops up for a few years and then disappears. 
 
-See how far we can get with no JavaScript and only CSS/HTML. Aim to reduce size all the time to make it really light.
-
-- optimize images 
-- choose blog platform and just link to it 
+This is the start of a site built with just html and css with either zero or minimal use of a programming language (JS for example). The idea here is to build something that looks reasonable and will just work forever no matter what + that does not require crazy upgrades or updates every six months.
