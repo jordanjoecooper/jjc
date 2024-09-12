@@ -3,14 +3,14 @@
 *,
 *::before,
 *::after {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 /* Prevent font size inflation */
 html {
-    -moz-text-size-adjust: none;
-    -webkit-text-size-adjust: none;
-    text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
 }
 
 /* Remove default margin in favour of better control in authored CSS */
@@ -24,23 +24,19 @@ figure,
 blockquote,
 dl,
 dd {
-    margin-block-end: 0;
+  margin-block-end: 0;
 }
 
 /* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
 ul[role="list"],
 ol[role="list"] {
-    list-style: none;
-}
-
-li{
-    list-style:none;
+  list-style: none;
 }
 
 /* Set core body defaults */
 body {
-    min-height: 100vh;
-    line-height: 1.5;
+  min-height: 100vh;
+  line-height: 1.5;
 }
 
 /* Set shorter line heights on headings and interactive elements */
@@ -51,7 +47,7 @@ h4,
 button,
 input,
 label {
-    line-height: 1.1;
+  line-height: 1.1;
 }
 
 /* Balance text wrapping on headings */
@@ -59,20 +55,20 @@ h1,
 h2,
 h3,
 h4 {
-    text-wrap: balance;
+  text-wrap: balance;
 }
 
 /* A elements that don't have a class get default styles */
 a:not([class]) {
-    text-decoration-skip-ink: auto;
-    color: currentColor;
+  text-decoration-skip-ink: auto;
+  color: currentColor;
 }
 
 /* Make images easier to work with */
 img,
 picture {
-    max-width: 100%;
-    display: block;
+  max-width: 100%;
+  display: block;
 }
 
 /* Inherit fonts for inputs and buttons */
@@ -80,130 +76,142 @@ input,
 button,
 textarea,
 select {
-    font-family: inherit;
-    font-size: inherit;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 /* Make sure textareas without a rows attribute are not tiny */
 textarea:not([rows]) {
-    min-height: 10em;
+  min-height: 10em;
 }
 
 /* Anything that has been anchored to should have extra scroll margin */
 :target {
-    scroll-margin-block: 5ex;
+  scroll-margin-block: 5ex;
 }
 
 /* CSS RESET ******** */
 body {
-    font-family: "Courier New", monospace;
-    background-color: #f9f9f1;
-    color: #333;
-    line-height: 1.8;
-    padding: 20px;
-    max-width: 900px;
-    margin: 0 auto;
-    font-size: 18px;
-    font-weight: 300;
-    text-rendering: optimizeLegibility;
-    padding: 2px 7px 7px 7px;
+  font-family: "Courier New", monospace;
+  background-color: #f9f9f1;
+  color: #333;
+  line-height: 1.8;
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-size: 18px;
+  font-weight: 300;
+  text-rendering: optimizeLegibility;
+  padding: 2px 7px 7px 7px;
 }
 
 header .icon {
-    display: flex;
-    align-self: center;
-    width: 3rem;
-    height: 3rem;
-    pointer-events: none;
+  display: flex;
+  align-self: center;
+  width: 3rem;
+  height: 3rem;
+  pointer-events: none;
 }
 
-h1 {
-    color: hwb(0 10% 90%);
-    white-space: nowrap;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    text-align: center;
-    padding: 0px;
-    margin: 0px;
-    font-family: Palatino;
+h1,
+h2 {
+  color: hwb(0 10% 90%);
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+  padding: 0px;
+  margin: 0px;
+  font-family: Palatino;
+}
+
+h3 {
+  color: hwb(0 10% 90%);
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-family: Palatino;
 }
 
 a {
-    text-decoration: none;
-    font-size: 1.1em;
-    transition: color 0.3s ease;
-    font-weight: 400;
+  text-decoration: none;
+  font-size: 1.1em;
+  transition: color 0.3s ease;
+  font-weight: 400;
 }
 
 a:hover {
-    color: #06c;
+  color: #06c;
 }
 
 p a {
-    transition: color 0.3s ease;
-    font-weight: 200;
+  transition: color 0.3s ease;
+  font-weight: 200;
 }
 
-
 header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 10px;
 }
 
 .menu-button-container {
-    display: none;
-    height: 100%;
-    width: 30px;
-    padding: 6px;
-    padding-right: 14px;
-    cursor: pointer;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  display: none;
+  height: 100%;
+  width: 30px;
+  padding: 6px;
+  padding-right: 14px;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .menu-button,
 .menu-button::before,
 .menu-button::after {
-    display: block;
-    background-color: #040404;
-    position: absolute;
-    height: 4px;
-    width: 30px;
-    transition: transform 400ms cubic-bezier(0.23, 1, 0.32, 1);
-    border-radius: 2px;
+  display: block;
+  background-color: #040404;
+  position: absolute;
+  height: 4px;
+  width: 30px;
+  transition: transform 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  border-radius: 2px;
 }
 
 .menu-button::before {
-    content: "";
-    margin-top: -8px;
+  content: "";
+  margin-top: -8px;
 }
 
 .menu-button::after {
-    content: "";
-    margin-top: 10px;
+  content: "";
+  margin-top: 10px;
 }
 
 .bio h1 a:first-child {
-    text-decoration: none;
+  text-decoration: none;
 }
 .bio a {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .bio {
-    padding-top: 25px;
+  padding-top: 25px;
 }
 
 .post-heading h1 a:first-child {
-    text-decoration: none;
+  text-decoration: none;
 }
 .post-heading a {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .post-heading {
-    padding-top: 25px;
+  padding-top: 25px;
+}
+
+.post-time {
+    text-align: center;
 }
