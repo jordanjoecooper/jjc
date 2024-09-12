@@ -14,9 +14,11 @@ Personal site built with html, css and minimal programming. The idea is to build
 - Point other sites at canonical version of posts
 - Replace main jjc domain with this site (deprecate next site)
 - Stop showing file extension (.html) on pages
+- Split up site into html/css only variant and one that uses JS for other stuff.
 ## Fun Tooling - seperate to blog frontend
 - Create an script to generate meta tags/description on each blog page automatically from its content.
 - Add script to run prettier over everything on push.
 - Add a WYSIWYG editor for basic html output.
 - Add a script to generate a sitemap.
 - Find a fun simply way to generate and commit/push posts from mobile
+- Add a script that compiles a list of all posts based on keywords and dates and makes them searchable via those keywords or dates if JS is enabled.
