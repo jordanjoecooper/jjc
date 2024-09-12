@@ -197,7 +197,13 @@ header {
     padding-top: 25px;
 }
 
-.ai-msg {
-    font-style: italic;
-    color: #f9f9f1;
+.post-heading h1 a:first-child {
+    text-decoration: none;
+}
+.post-heading a {
+    text-decoration: underline;
+}
+
+.post-heading {
+    padding-top: 25px;
 }
