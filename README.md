@@ -9,6 +9,11 @@ Personal site built with html, css and minimal programming. The idea is to build
 
 # To Do
 
+Find an easy way to cross posts bewteen sites at once
+- hackernews
+- medium
+- devto
+
 ## Other
 - Migrate old posts from other sites to here
 - Point other sites at canonical version of posts
