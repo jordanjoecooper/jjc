@@ -1,211 +1,139 @@
 /* CSS RESET ****** */
-/* Box sizing rules */
-*,
-*::before,
-*::after {
+/* Base styles */
+:root {
+  --primary-color: #333;
+  --background-color: #f8f8f8;
+  --accent-color: #007aff;
+  --text-color: #333;
+  --heading-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --body-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Prevent font size inflation */
 html {
-  -moz-text-size-adjust: none;
-  -webkit-text-size-adjust: none;
-  text-size-adjust: none;
-  font-size: 16px; /* Base font size */
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Remove default margin in favour of better control in authored CSS */
-body,
-h1,
-h2,
-h3,
-h4,
-p,
-figure,
-blockquote,
-dl,
-dd {
-  margin-block-end: 0;
-}
-
-/* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
-ul[role="list"],
-ol[role="list"] {
-  list-style: none;
-}
-
-/* Set core body defaults */
 body {
-  min-height: 100vh;
-  line-height: 1.5;
-  font-family: "Courier New", monospace;
-  background-color: #f9f9f1;
-  color: #333;
-  padding: 20px;
+  font-family: var(--body-font);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  max-width: 800px;
   margin: 0 auto;
-  font-weight: 300;
-  text-rendering: optimizeLegibility;
-  max-width: 100%; /* Ensure content doesn't exceed viewport width */
-  overflow-x: hidden; /* Prevent horizontal scrolling */
+  padding: 2rem;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-in forwards;
 }
 
-/* Set shorter line heights on headings and interactive elements */
-h1,
-h2,
-h3,
-h4,
-button,
-input,
-label {
-  line-height: 1.1;
+@keyframes fadeIn {
+  to { opacity: 1; }
 }
 
-/* Balance text wrapping on headings */
-h1,
-h2,
-h3,
-h4 {
-  text-wrap: balance;
-}
-
-/* A elements that don't have a class get default styles */
-a:not([class]) {
-  text-decoration-skip-ink: auto;
-  color: currentColor;
-}
-
-/* Make images easier to work with */
-img,
-picture {
-  max-width: 100%;
-  display: block;
-}
-
-/* Inherit fonts for inputs and buttons */
-input,
-button,
-textarea,
-select {
-  font-family: inherit;
-  font-size: inherit;
-}
-
-/* Anything that has been anchored to should have extra scroll margin */
-:target {
-  scroll-margin-block: 5ex;
-}
-
-/* CSS RESET ******** */
-body {
-  font-family: "Courier New", monospace;
-  background-color: #f9f9f1;
-  color: #333;
-  line-height: 1.8;
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  font-size: 18px;
-  font-weight: 300;
-  text-rendering: optimizeLegibility;
-  padding:10px;
-}
-
-header .icon {
-  display: flex;
-  align-self: center;
-  width: 3rem;
-  height: 3rem;
-  pointer-events: none;
-}
-
-h1,
-h2 {
-  color: hwb(0 10% 90%);
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
   font-weight: 600;
-  letter-spacing: -0.02em;
-  text-align: center;
-  padding: 6px 0px 0px 0px;
-  margin: 0px;
-  font-family: Palatino;
-  white-space: normal; /* Allow text to wrap */
-  word-wrap: break-word; /* Break long words if necessary */
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
 }
 
-h3 {
-  color: hwb(0 10% 90%);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  font-family: Palatino;
-  white-space: normal; /* Allow text to wrap */
-  word-wrap: break-word; /* Break long words if necessary */
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+
+p {
+  margin-bottom: 1.5rem;
+  font-size: 1.125rem;
 }
 
 a {
+  color: var(--accent-color);
   text-decoration: none;
-  font-size: 1.1em;
   transition: color 0.3s ease;
-  font-weight: 400;
 }
 
 a:hover {
-  color: #06c;
+  color: #005ecb;
 }
 
-p a {
-  transition: color 0.3s ease;
-  font-weight: 200;
-}
-
+/* Header */
 header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-top: 10px;
+  margin-bottom: 3rem;
+  text-align: center;
 }
 
-.bio h1 a:first-child {
-  text-decoration: none;
-}
-.bio a {
-  text-decoration: underline;
+header h2 {
+  font-size: 2.5rem;
+  margin-bottom: 0;
 }
 
-.bio {
-  padding-top: 20px;
+/* Main content */
+main {
+  animation: slideUp 0.5s ease-out;
 }
 
-.post-heading h1 a:first-child {
-  text-decoration: none;
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
-.post-heading a {
-  text-decoration: underline;
+
+.bio, .post-heading {
+  margin-bottom: 3rem;
 }
 
 .post-heading {
-  padding-top: 24px;
+  margin-bottom: 2rem;
+}
+
+.post-heading h1 {
+  margin-bottom: 0.25rem;
 }
 
 .post-time {
-    text-align: center;
+  font-size: 0.9rem;
+  color: #666;
 }
 
-/* Responsive adjustments */
+/* Lists */
+ul, ol {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+/* Code blocks */
+code {
+  font-family: 'SF Mono', Consolas, Monaco, 'Andale Mono', monospace;
+  background-color: #f1f1f1;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
-  html {
-    font-size: 14px; /* Slightly smaller base font size for mobile */
-  }
-
   body {
-    padding: 10px;
-    font-size: 16px;
+    padding: 1rem;
   }
 
-  h1, h2, h3 {
-    font-size: 1.5em;
-  }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
 
-  .bio, .post-heading {
-    padding-top: 15px;
+  p {
+    font-size: 1rem;
   }
 }
 
