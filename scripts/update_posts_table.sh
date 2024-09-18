@@ -5,8 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 INDEX_FILE="$ROOT_DIR/index.html"
 
-# Create temporary file
+# Create temporary files
 TEMP_FILE=$(mktemp)
+SORTED_FILE=$(mktemp)
 
 # Generate the new table content
 echo "<table class=\"posts-table\">" > "$TEMP_FILE"
@@ -36,17 +37,24 @@ find "$ROOT_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" ! -name "about.
 
     # Only process if date is valid, title is present, and not marked as unpublished
     if validate_date "$DATE" && [ -n "$TITLE" ]; then
-        # Format the date
+        # Format the date for sorting and display
         if [[ "$OSTYPE" == "darwin"* ]]; then
+            SORT_DATE=$(date -jf "%B %d, %Y" "$DATE" "+%Y%m%d" 2>/dev/null)
             FORMATTED_DATE=$(date -jf "%B %d, %Y" "$DATE" "+%b %d, %Y" 2>/dev/null)
         else
+            SORT_DATE=$(date -d "$DATE" "+%Y%m%d" 2>/dev/null)
             FORMATTED_DATE=$(date -d "$DATE" "+%b %d, %Y" 2>/dev/null)
         fi
 
-        # Modify the row generation part
-        echo "    <tr onclick=\"window.location='$FILENAME';\" style=\"cursor: pointer;\"><td>$FORMATTED_DATE</td><td><a href=\"$FILENAME\">$TITLE</a></td></tr>" >> "$TEMP_FILE"
+        # Output to sorted file
+        echo "$SORT_DATE|$FORMATTED_DATE|$FILENAME|$TITLE" >> "$SORTED_FILE"
     fi
-done | sort -r >> "$TEMP_FILE"
+done
+
+# Sort the entries by date (newest first) and generate the table rows
+sort -r "$SORTED_FILE" | while IFS='|' read -r _ FORMATTED_DATE FILENAME TITLE; do
+    echo "    <tr onclick=\"window.location='$FILENAME';\" style=\"cursor: pointer;\"><td>$FORMATTED_DATE</td><td><a href=\"$FILENAME\">$TITLE</a></td></tr>" >> "$TEMP_FILE"
+done
 
 # Close the table
 echo "  </tbody>" >> "$TEMP_FILE"
@@ -62,6 +70,6 @@ else
 fi
 
 # Clean up
-rm "$TEMP_FILE"
+rm "$TEMP_FILE" "$SORTED_FILE"
 
-echo "index.html has been updated with the latest posts."
+echo "index.html has been updated with the latest posts, sorted from newest to oldest."
