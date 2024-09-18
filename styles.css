@@ -77,13 +77,13 @@ header h2 {
 }
 
 header h2 a {
-  font-weight: 300;
-  letter-spacing: -0.5px;
-  transition: opacity 0.3s ease;
+  color: var(--accent-color);  /* Keep this blue */
+  text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 header h2 a:hover {
-  opacity: 0.7;
+  color: #005ecb;  /* A darker blue for hover, adjust as needed */
 }
 
 h1, h2, h3, h4, h5, h6 {
