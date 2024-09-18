@@ -56,13 +56,24 @@ p {
 }
 
 a {
-  color: var(--accent-color);
+  color: inherit;
   text-decoration: none;
-  transition: color 0.3s ease;
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
 a:hover {
-  color: #005ecb;
+  color: var(--accent-color);
+  border-bottom: 1px solid var(--accent-color);
+}
+
+/* Exclude header links from this styling */
+header a, .posts-table a {
+  border-bottom: none;
+}
+
+header a:hover, .posts-table a:hover {
+  border-bottom: none;
 }
 
 /* Header */
@@ -206,10 +217,11 @@ img {
 .posts-table a {
   color: inherit;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .posts-table a:hover {
-  text-decoration: underline;
+  color: #005ecb;
 }
 
 .posts-table tr:last-child td {
