@@ -37,3 +37,9 @@ Make it executable with `chmod +x scripts/update_posts_table.sh`
 To Run: `./scripts/update_posts_table.sh`
 
 It will read in all the html files excluding the ones in the ignore list, extract the date and title and add them to the table on the homepage.
+
+- create_blog_post.sh
+Make it executable with `chmod +x scripts/create_blog_post.sh`
+To Run: `./scripts/create_blog_post.sh`
+
+It will prompt for a title and create a html file with todays date. It will add a comment with <!-- unpublished --> to the top of the file so that it is not included in the posts table on the homepage.
