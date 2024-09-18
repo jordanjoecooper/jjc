@@ -27,3 +27,13 @@ Find an easy way to cross posts bewteen sites at once
 - Add a script to generate a sitemap.
 - Find a fun simply way to generate and commit/push posts from mobile
 - Add a script that compiles a list of all posts based on keywords and dates and makes them searchable via those keywords or dates if JS is enabled.
+
+
+
+# Scripts
+Because I like to make my life harder and more scripty than it needs to be I have a few scripts to help with maintenance / updating the site.
+- update_posts_table.sh
+Make it executable with `chmod +x scripts/update_posts_table.sh`
+To Run: `./scripts/update_posts_table.sh`
+
+It will read in all the html files excluding the ones in the ignore list, extract the date and title and add them to the table on the homepage.
