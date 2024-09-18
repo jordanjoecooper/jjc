@@ -225,3 +225,15 @@ img {
 .posts-table a:hover {
   color: #005ecb;
 }
+
+.bio a {
+  color: inherit; /* Uses parent text color */
+  text-decoration: none; /* Remove default underline*/
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.3); /* Add faded dotted underline */
+  transition: all 0.3s ease; /* Add smooth transition for all properties */
+}
+
+.bio a:hover {
+  color: var(--accent-color); /* Change to blue accent on hover */
+  border-bottom: 1px solid var(--accent-color); /* Show full solid underline on hover */
+}
