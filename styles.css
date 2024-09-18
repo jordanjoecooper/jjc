@@ -11,6 +11,7 @@ html {
   -moz-text-size-adjust: none;
   -webkit-text-size-adjust: none;
   text-size-adjust: none;
+  font-size: 16px; /* Base font size */
 }
 
 /* Remove default margin in favour of better control in authored CSS */
@@ -37,6 +38,15 @@ ol[role="list"] {
 body {
   min-height: 100vh;
   line-height: 1.5;
+  font-family: "Courier New", monospace;
+  background-color: #f9f9f1;
+  color: #333;
+  padding: 20px;
+  margin: 0 auto;
+  font-weight: 300;
+  text-rendering: optimizeLegibility;
+  max-width: 100%; /* Ensure content doesn't exceed viewport width */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 /* Set shorter line heights on headings and interactive elements */
@@ -111,21 +121,23 @@ header .icon {
 h1,
 h2 {
   color: hwb(0 10% 90%);
-  white-space: nowrap;
   font-weight: 600;
   letter-spacing: -0.02em;
   text-align: center;
   padding: 6px 0px 0px 0px;
   margin: 0px;
   font-family: Palatino;
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Break long words if necessary */
 }
 
 h3 {
   color: hwb(0 10% 90%);
-  white-space: nowrap;
   font-weight: 600;
   letter-spacing: -0.02em;
   font-family: Palatino;
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Break long words if necessary */
 }
 
 a {
@@ -175,4 +187,30 @@ header {
 
 .post-time {
     text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px; /* Slightly smaller base font size for mobile */
+  }
+
+  body {
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  h1, h2, h3 {
+    font-size: 1.5em;
+  }
+
+  .bio, .post-heading {
+    padding-top: 15px;
+  }
+}
+
+/* Ensure images don't overflow */
+img {
+  max-width: 100%;
+  height: auto;
 }
