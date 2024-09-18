@@ -25,7 +25,7 @@ validate_date() {
 # Process each HTML file in the root directory, excluding index.html, about.html, and contact.html
 find "$ROOT_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" ! -name "about.html" ! -name "contact.html" | while read -r file; do
     # Check if the file is marked as unpublished
-    if grep -q "// unpublished" "$file"; then
+    if grep -q "<!-- unpublished -->" "$file"; then
         continue
     fi
 
