@@ -43,8 +43,8 @@ find "$ROOT_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" ! -name "about.
             FORMATTED_DATE=$(date -d "$DATE" "+%b %d, %Y" 2>/dev/null)
         fi
 
-        # Add a row to the table
-        echo "    <tr><td>$FORMATTED_DATE</td><td><a href=\"$FILENAME\">$TITLE</a></td></tr>" >> "$TEMP_FILE"
+        # Modify the row generation part
+        echo "    <tr onclick=\"window.location='$FILENAME';\" style=\"cursor: pointer;\"><td>$FORMATTED_DATE</td><td><a href=\"$FILENAME\">$TITLE</a></td></tr>" >> "$TEMP_FILE"
     fi
 done | sort -r >> "$TEMP_FILE"
 
