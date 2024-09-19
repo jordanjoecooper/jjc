@@ -140,15 +140,23 @@ main {
 
 .post-heading {
   margin-bottom: 2rem;
+  position: relative; /* Add this */
 }
 
 .post-heading h1 {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+  position: relative; /* Add this */
+  left: -0.07em; /* Adjust this value as needed */
 }
 
 .post-time {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #666;
+  display: block;
+  line-height: 1.2;
+  position: relative; /* Add this */
+  left: -0.05em; /* Adjust this value as needed */
 }
 
 /* Lists */
