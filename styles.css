@@ -214,4 +214,28 @@ img {
 .bio a:hover {
   color: var(--accent-color); /* Change to blue accent on hover */
   border-bottom: 1px solid var(--accent-color); /* Show full solid underline on hover */
+
+  
+  .back-button-container {
+    margin-top: 2rem;
+    text-align: center;
+  }
+  
+  .back-button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: var(--accent-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: 2px solid var(--accent-color); /* Added border */
+  }
+  
+  .back-button:hover {
+    background-color: white;
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+  }
 }
