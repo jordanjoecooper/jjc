@@ -48,3 +48,5 @@ Make it executable with `chmod +x scripts/update_blog_post_meta_tags.sh`
 To Run: `./scripts/update_blog_post_meta_tags.sh <file_path>`
 It will update the meta tags in the blog post.
 
+
+.
