@@ -3,7 +3,7 @@
 Personal site built with html, css and minimal programming. The idea is to build something that looks reasonable and works forever.
 
 # Rules
-1. Minimal JavaScript.
+1. No JavaScript.
 2. No Frameworks.
 3. Minimal Assets.
 
@@ -32,12 +32,15 @@ Find an easy way to cross posts bewteen sites at once
 
 # Scripts
 Because I like to make my life harder and more scripty than it needs to be I have a few scripts to help with maintenance / updating the site.
+
+## Update Posts Table
 - update_posts_table.sh
 Make it executable with `chmod +x scripts/update_posts_table.sh`
 To Run: `./scripts/update_posts_table.sh`
 
 It will read in all the html files excluding the ones in the ignore list, extract the date and title and add them to the table on the homepage.
 
+## Create Blog Post
 - create_blog_post.sh
 Make it executable with `chmod +x scripts/create_blog_post.sh`
 To Run: `./scripts/create_blog_post.sh`
