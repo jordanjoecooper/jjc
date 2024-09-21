@@ -40,7 +40,7 @@ cat << EOF > "$filename"
   <body>
     <header>
       <h2>
-        <a href="https://jordanjoecooper.github.io/jcuk/">Jordan Joe Cooper</a>
+        <a href="https://jordanjoecooper.dev">Jordan Joe Cooper</a>
       </h2>
     </header>
     <main>
