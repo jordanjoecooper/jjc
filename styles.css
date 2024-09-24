@@ -6,6 +6,11 @@
   --text-color: #333;
   --heading-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
   --body-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  --line-height: 1.8;
+  --max-width: 800px;
+  --font-size: 1.125rem;
+  --spacing: 1.5rem;
+  --transition-duration: 0.3s;
 }
 
 * {
@@ -24,18 +29,17 @@ body {
   font-family: var(--body-font);
   background-color: var(--background-color);
   color: var(--text-color);
-  line-height: 1.6;
-  max-width: 800px;
+  line-height: var(--line-height);
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--spacing);
 }
 
-/* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--heading-font);
   font-weight: 600;
   line-height: 1.2;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing);
   color: var(--primary-color);
 }
 
@@ -44,26 +48,27 @@ h2 { font-size: 2rem; }
 h3 { font-size: 1.75rem; }
 
 p {
-  margin-bottom: 1.5rem;
-  font-size: 1.125rem;
-  line-height: 1.8;
+  margin-bottom: var(--spacing);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
 }
 
 a {
   color: var(--accent-color);
   text-decoration: none;
   border-bottom: 1px solid rgba(0, 122, 255, 0.3);
-  transition: all 0.3s ease;
+  transition: all var(--transition-duration) ease;
 }
 
 a:hover {
   border-bottom: 1px solid var(--accent-color);
 }
+
 .bio a {
-  color: inherit; /* Uses parent text color */
-  text-decoration: none; /* Remove default underline*/
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.3); /* Add faded dotted underline */
-  transition: all 0.3s ease; /* Add smooth transition for all properties */
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-duration) ease;
 }
 
 .bio a:hover {
@@ -71,9 +76,8 @@ a:hover {
   border-bottom: 1px solid var(--accent-color-dark);
 }
 
-/* Header */
 header {
-  margin-bottom: 3rem;
+  margin-bottom: var(--spacing);
   text-align: left;
 }
 
@@ -85,7 +89,7 @@ header h2 {
 header h2 a {
   color: var(--accent-color);
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color var(--transition-duration) ease;
   border-bottom: none;
 }
 
@@ -94,11 +98,11 @@ header h2 a:hover {
 }
 
 .bio, .post-heading {
-  margin-bottom: 3rem;
+  margin-bottom: var(--spacing);
 }
 
 .post-heading {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing);
 }
 
 .post-heading h1 {
@@ -113,15 +117,14 @@ header h2 a:hover {
   line-height: 1.2;
 }
 
-/* Content */
 main {
-  font-size: 1.125rem;
-  line-height: 1.8;
+  font-size: var(--font-size);
+  line-height: var(--line-height);
 }
 
 ul, ol {
-  margin-bottom: 1.5rem;
-  padding-left: 1.5rem;
+  margin-bottom: var(--spacing);
+  padding-left: var(--spacing);
 }
 
 li {
@@ -136,48 +139,37 @@ code {
   font-size: 0.9em;
 }
 
-/* Table styles */
 .posts-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 1.5rem;
+  margin-top: var(--spacing);
 }
 
 .posts-table th,
 .posts-table td {
-  padding: 1rem;
+  padding: var(--spacing);
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
 }
-/*
-.posts-table tbody tr {
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.posts-table tbody tr:hover {
-  background-color: #f5f5f5;
-} */
 
 .posts-table a {
   color: var(--accent-color);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--transition-duration) ease;
   border-bottom: none;
 }
 
 .posts-table a:hover {
-  color: --accent-color-dark;
+  color: var(--accent-color-dark);
 }
 
 .posts-table tr:last-child td {
   border-bottom: none;
 }
 
-/* Back button */
 .back-button-container {
-  margin-top: 3rem;
+  margin-top: var(--spacing);
   text-align: center;
 }
 
@@ -189,7 +181,7 @@ code {
   text-decoration: none;
   border-radius: 4px;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: all var(--transition-duration) ease;
   border: 2px solid var(--accent-color);
 }
 
