@@ -60,6 +60,25 @@ a:hover {
   border-bottom: 1px solid var(--accent-color);
 }
 
+/* Exclude header links from this styling */
+/* header a, .posts-table a {
+  border-bottom: none;
+}
+header a:hover, .posts-table a:hover {
+  border-bottom: none;
+} */
+.bio a {
+  color: inherit; /* Uses parent text color */
+  text-decoration: none; /* Remove default underline*/
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.3); /* Add faded dotted underline */
+  transition: all 0.3s ease; /* Add smooth transition for all properties */
+}
+
+.bio a:hover {
+  color: var(--accent-color-dark);
+  border-bottom: 1px solid var(--accent-color-dark);
+}
+
 /* Header */
 header {
   margin-bottom: 3rem;
@@ -79,7 +98,7 @@ header h2 a {
 }
 
 header h2 a:hover {
-  color: #005ecb;
+  color: var(--accent-color-dark);
 }
 
 .bio, .post-heading {
@@ -157,7 +176,7 @@ code {
 }
 
 .posts-table a:hover {
-  color: #005ecb;
+  color: --accent-color-dark;
 }
 
 .posts-table tr:last-child td {
