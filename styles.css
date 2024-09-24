@@ -34,7 +34,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--heading-font);
   font-weight: 600;
   line-height: 1.2;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   color: var(--primary-color);
 }
 
@@ -45,33 +45,24 @@ h3 { font-size: 1.75rem; }
 p {
   margin-bottom: 1.5rem;
   font-size: 1.125rem;
+  line-height: 1.8;
 }
 
 a {
-  color: inherit;
+  color: var(--accent-color);
   text-decoration: none;
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(0, 122, 255, 0.3);
   transition: all 0.3s ease;
 }
 
 a:hover {
-  color: var(--accent-color);
   border-bottom: 1px solid var(--accent-color);
-}
-
-/* Exclude header links from this styling */
-header a, .posts-table a {
-  border-bottom: none;
-}
-
-header a:hover, .posts-table a:hover {
-  border-bottom: none;
 }
 
 /* Header */
 header {
   margin-bottom: 3rem;
-  text-align: center;
+  text-align: left;
 }
 
 header h2 {
@@ -80,18 +71,14 @@ header h2 {
 }
 
 header h2 a {
-  color: var(--accent-color);  /* Keep this blue */
+  color: var(--accent-color);
   text-decoration: none;
   transition: color 0.3s ease;
+  border-bottom: none;
 }
 
 header h2 a:hover {
-  color: #005ecb;  /* A darker blue for hover */
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 300;
-  letter-spacing: -0.5px;
+  color: #005ecb;
 }
 
 .bio, .post-heading {
@@ -100,14 +87,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .post-heading {
   margin-bottom: 2rem;
-  position: relative; 
 }
 
 .post-heading h1 {
   margin-bottom: 0.5rem;
   line-height: 1.2;
-  position: relative;
-  left: -0.07em;
 }
 
 .post-time {
@@ -115,8 +99,12 @@ h1, h2, h3, h4, h5, h6 {
   color: #666;
   display: block;
   line-height: 1.2;
-  position: relative;
-  left: -0.05em;
+}
+
+/* Content */
+main {
+  font-size: 1.125rem;
+  line-height: 1.8;
 }
 
 ul, ol {
@@ -136,37 +124,17 @@ code {
   font-size: 0.9em;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  body {
-    padding: 1rem;
-  }
-
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.75rem; }
-  h3 { font-size: 1.5rem; }
-
-  p {
-    font-size: 1rem;
-  }
-}
-
-/* Ensure images don't overflow */
-img {
-  max-width: 100%;
-  height: auto;
-}
-
 /* Table styles */
 .posts-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  margin-top: 1.5rem;
 }
 
 .posts-table th,
 .posts-table td {
-  padding: 12px 15px;
+  padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
 }
@@ -181,9 +149,10 @@ img {
 }
 
 .posts-table a {
-  color: inherit;
+  color: var(--accent-color);
   text-decoration: none;
   transition: color 0.2s ease;
+  border-bottom: none;
 }
 
 .posts-table a:hover {
@@ -194,48 +163,74 @@ img {
   border-bottom: none;
 }
 
-.posts-table a {
-  color: var(--accent-color);
+/* Back button */
+.back-button-container {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.back-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--accent-color);
+  color: white;
   text-decoration: none;
-  transition: color 0.2s ease;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  border: 2px solid var(--accent-color);
 }
 
-.posts-table a:hover {
-  color: #005ecb;
+.back-button:hover {
+  background-color: white;
+  color: var(--accent-color);
 }
 
-.bio a {
-  color: inherit; /* Uses parent text color */
-  text-decoration: none; /* Remove default underline*/
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.3); /* Add faded dotted underline */
-  transition: all 0.3s ease; /* Add smooth transition for all properties */
-}
-
-.bio a:hover {
-  color: var(--accent-color); /* Change to blue accent on hover */
-  border-bottom: 1px solid var(--accent-color); /* Show full solid underline on hover */
-
-  
-  .back-button-container {
-    margin-top: 2rem;
-    text-align: center;
+/* Responsive design */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
   }
-  
-  .back-button {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background-color: var(--accent-color);
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
+
+  body {
+    padding: 1.5rem;
+  }
+
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+
+  main {
     font-size: 1rem;
-    transition: all 0.3s ease;
-    border: 2px solid var(--accent-color); /* Added border */
   }
-  
-  .back-button:hover {
-    background-color: white;
-    color: var(--accent-color);
-    border-color: var(--accent-color);
+
+  .posts-table th,
+  .posts-table td {
+    padding: 0.75rem;
   }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
+
+  body {
+    padding: 1rem;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+
+  .posts-table th,
+  .posts-table td {
+    padding: 0.5rem;
+  }
+}
+
+/* Ensure images don't overflow */
+img {
+  max-width: 100%;
+  height: auto;
 }
