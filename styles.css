@@ -10,6 +10,7 @@
   --max-width: 800px;
   --font-size: 1.125rem;
   --spacing: 1.5rem;
+  --spacing-small: 0.75rem;
   --transition-duration: 0.3s;
 }
 
@@ -148,7 +149,7 @@ code {
 
 .posts-table th,
 .posts-table td {
-  padding: var(--spacing);
+  padding: var(--spacing-small);
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
 }
