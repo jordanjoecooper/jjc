@@ -239,3 +239,8 @@ img {
   max-width: 100%;
   height: auto;
 }
+
+.nounderline a {
+  border-bottom: none;
+  text-decoration: none;
+}
