@@ -55,7 +55,6 @@ p {
 }
 
 a {
-  /* color: var(--accent-color); */
   text-decoration: none;
   border-bottom: 1px solid rgba(0, 122, 255, 0.3);
   transition: all var(--transition-duration) ease;
@@ -107,6 +106,12 @@ header h2 a:hover {
   line-height: 1.2;
 }
 
+.post-heading a {
+  color: var(--primary-color);
+  text-decoration: none;
+  border-bottom: solid 1px var(--primary-color);
+}
+
 .post-time {
   font-size: 1rem;
   color: #666;
@@ -151,7 +156,7 @@ code {
 }
 
 .posts-table a {
-  color: var(--accent-color);
+  color: var(--primary-color);
   text-decoration: none;
   transition: color var(--transition-duration) ease;
   border-bottom: none;
@@ -168,11 +173,11 @@ code {
 .back-button {
   display: inline-block;
   padding: 2px 12px;
-  color: var(--accent-color);
+  color: var(--primary-color);
   text-decoration: none;
   border-radius: 4px;
   font-size: 1rem;
-  border: 2px solid var(--accent-color);
+  border: 2px solid var(--primary-color);
 } 
 
 /* Responsive design */
@@ -227,4 +232,21 @@ img {
 .nounderline a {
   border-bottom: none;
   text-decoration: none;
+}
+
+hr {
+  border-top: 1px dotted var(--primary-color);
+  border-style: dotted;
+  color: #fff;
+  background-color: #fff;
+  height: 1px;
+  width: 100%;
+}
+
+.last-updated {
+  font-size: 0.875rem;
+  color: #666;
+  text-align: center;
+  margin-top: var(--spacing);
+  padding-top: var(--spacing);
 }
