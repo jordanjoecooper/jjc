@@ -223,13 +223,22 @@ img {
   height: auto;
 }
 
-.links a {
+.social-links {
+  padding-top: var(--spacing);
+}
+
+.social-links a {
   border-bottom: none;
   text-decoration: none;
 }
 
-.links a:hover {
+.social-links a:hover {
   border-bottom: none;
+  text-decoration: none;
+}
+
+.podcast-link a {
+  margin-bottom: var(--spacing);
   text-decoration: none;
 }
 
