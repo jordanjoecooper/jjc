@@ -1,6 +1,6 @@
 # Jordan Cooper
 
-Personal site built with html, css and minimal programming. The idea is to build something that looks reasonable and works forever.
+Personal site built with html, css and minimal JS (currently none). The idea is to build something that looks plain,reasonable and works forever without any external dependencies or updates.
 
 # Rules
 1. No JavaScript for core functionality and site should work it is disabled in the browser.
