@@ -43,6 +43,13 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: var(--spacing);
   color: var(--primary-color);
 }
+
+h2 {
+  padding-top: 1rem;
+  padding-bottom: 0rem;
+  margin-bottom: 0.5rem;
+}
+
 p {
   margin-bottom: var(--spacing);
   font-size: var(--font-size);
