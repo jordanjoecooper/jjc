@@ -223,13 +223,17 @@ code {
   }
 }
 
-/* Ensure images don't overflow */
 img {
   max-width: 100%;
   height: auto;
 }
 
-.nounderline a {
+.links a {
+  border-bottom: none;
+  text-decoration: none;
+}
+
+.links a:hover {
   border-bottom: none;
   text-decoration: none;
 }
