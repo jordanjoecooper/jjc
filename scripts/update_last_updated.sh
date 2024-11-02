@@ -1,7 +1,14 @@
 #!/bin/bash
 
-# Get the current date
-current_date=$(date "+%B %d, %Y")
+# Get the current date and time
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS version
+    current_datetime=$(date "+%B %d, %Y at %H:%M")
+else
+    # Linux version
+    current_datetime=$(date "+%B %d, %Y at %H:%M")
+fi
+
 INDEX_FILE="index.html"
 
 # Check if index.html exists
@@ -16,14 +23,14 @@ TEMP_FILE=$(mktemp)
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS version
     sed -E "/<div class=\"last-updated\">/c\\
-    <div class=\"last-updated\">Last updated: ${current_date}</div>" "$INDEX_FILE" > "$TEMP_FILE"
+    <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE" > "$TEMP_FILE"
     mv "$TEMP_FILE" "$INDEX_FILE"
 else
     # Linux version
-    sed -i "/<div class=\"last-updated\">/c\\    <div class=\"last-updated\">Last updated: ${current_date}</div>" "$INDEX_FILE"
+    sed -i "/<div class=\"last-updated\">/c\\    <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE"
 fi
 
 # Clean up
 rm -f "$TEMP_FILE"
 
-echo "Updated last-updated date to: $current_date" 
+echo "Updated last-updated date to: $current_datetime" 
