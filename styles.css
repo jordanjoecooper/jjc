@@ -100,6 +100,7 @@ header h1 a:hover {
 .post-heading h1 {
   margin-bottom: 0.5rem;
   line-height: 1.2;
+  font-size: 2rem;
 }
 
 .post-heading a {
@@ -185,10 +186,6 @@ code {
     padding: var(--spacing);
   }
 
-  h1 { font-size: 2.25rem; }
-  h2 { font-size: 1.75rem; }
-  h3 { font-size: 1.5rem; }
-
   main {
     font-size: 1rem;
   }
@@ -207,10 +204,6 @@ code {
   body {
     padding: 1rem;
   }
-
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.25rem; }
 
   .posts-table th,
   .posts-table td {
