@@ -3,7 +3,7 @@
 # Get the git hooks directory
 HOOKS_DIR="$(git rev-parse --git-dir)/hooks"
 
-# Create the pre-commit hook with the update logic directly inside
+# Create the pre-commit hook
 cat << 'EOF' > "$HOOKS_DIR/pre-commit"
 #!/bin/bash
 
@@ -11,38 +11,35 @@ cat << 'EOF' > "$HOOKS_DIR/pre-commit"
 REPO_ROOT=$(git rev-parse --show-toplevel)
 INDEX_FILE="$REPO_ROOT/index.html"
 
-# Get the current date and time
+# Update last-updated timestamp
 current_datetime=$(date "+%B %d, %Y at %H:%M")
 
-# Check if index.html exists
-if [ ! -f "$INDEX_FILE" ]; then
-    echo "Error: index.html not found"
-    exit 1
+if [ -f "$INDEX_FILE" ]; then
+    TEMP_FILE=$(mktemp)
+    
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -E "/<div class=\"last-updated\">/c\\
+        <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE" > "$TEMP_FILE"
+        mv "$TEMP_FILE" "$INDEX_FILE"
+    else
+        sed -i "/<div class=\"last-updated\">/c\\    <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE"
+    fi
+    
+    rm -f "$TEMP_FILE"
+    git add "$INDEX_FILE"
+    echo "Updated last-updated timestamp to: $current_datetime"
 fi
 
-# Create a temporary file
-TEMP_FILE=$(mktemp)
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS version
-    sed -E "/<div class=\"last-updated\">/c\\
-    <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE" > "$TEMP_FILE"
-    mv "$TEMP_FILE" "$INDEX_FILE"
-else
-    # Linux version
-    sed -i "/<div class=\"last-updated\">/c\\    <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE"
+# Update sitemap
+node "$REPO_ROOT/scripts/update_sitemap.js"
+if [ $? -eq 0 ]; then
+    git add "$REPO_ROOT/sitemap.xml"
+    echo "Updated sitemap.xml"
 fi
 
-# Clean up
-rm -f "$TEMP_FILE"
-
-# Stage the modified index.html
-git add "$INDEX_FILE"
-
-echo "Updated last-updated timestamp to: $current_datetime"
 EOF
 
 # Make the pre-commit hook executable
 chmod +x "$HOOKS_DIR/pre-commit"
 
-echo "Git pre-commit hook installed successfully" 
+echo "Git pre-commit hook installed successfully"
