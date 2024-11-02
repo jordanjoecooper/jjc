@@ -180,14 +180,13 @@ code {
   border: 2px solid var(--primary-color);
 } 
 
-/* Responsive design */
 @media (max-width: 768px) {
   html {
     font-size: 14px;
   }
 
   body {
-    padding: 1.5rem;
+    padding: var(--spacing);
   }
 
   h1 { font-size: 2.25rem; }
