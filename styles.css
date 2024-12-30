@@ -1,16 +1,17 @@
 :root {
-  --primary-color: #333;
-  --background-color: #f8f8f8;
-  --accent-color: #007aff;
-  --accent-color-dark: #005ecb;
-  --text-color: #333;
-  --heading-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
-  --body-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
-  --line-height: 1.8;
-  --max-width: 800px;
-  --font-size: 1.125rem;
-  --spacing: 1.5rem;
-  --spacing-small: 0.75rem;
+  --primary-color: #1d1d1f;
+  --background-color: #fbfbfd;
+  --accent-color: #06c;
+  --accent-color-dark: #0077ed;
+  --text-color: #1d1d1f;
+  --secondary-text-color: #86868b;
+  --heading-font: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --body-font: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --line-height: 1.47059;
+  --max-width: 680px;
+  --font-size: 17px;
+  --spacing: 2rem;
+  --spacing-small: 1rem;
   --transition-duration: 0.3s;
 }
 
@@ -34,26 +35,42 @@ body {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--spacing);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--heading-font);
   font-weight: 600;
-  line-height: 1.2;
+  letter-spacing: -0.009em;
+  line-height: 1.1;
   margin-bottom: var(--spacing);
   color: var(--primary-color);
 }
 
+h1 {
+  font-size: 48px;
+  letter-spacing: -0.015em;
+}
+
 h2 {
-  padding-top: 1rem;
-  padding-bottom: 0rem;
-  margin-bottom: 0.5rem;
+  font-size: 32px;
+  letter-spacing: -0.012em;
 }
 
 p {
   margin-bottom: var(--spacing);
   font-size: var(--font-size);
   line-height: var(--line-height);
+  letter-spacing: -0.022em;
+}
+
+.bio {
+  font-size: 21px;
+  line-height: 1.381;
+  letter-spacing: .011em;
+  margin-bottom: var(--spacing);
 }
 
 a {
@@ -149,24 +166,44 @@ code {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: var(--spacing);
+  margin-bottom: var(--spacing);
 }
 
-.posts-table th,
 .posts-table td {
-  padding: var(--spacing-small);
-  text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 1rem 0;
+  font-size: var(--font-size);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.posts-table td:last-child {
+  color: var(--secondary-text-color);
+  text-align: right;
 }
 
 .posts-table a {
-  color: var(--primary-color);
+  color: var(--text-color);
   text-decoration: none;
   transition: color var(--transition-duration) ease;
   border-bottom: none;
+  position: relative;
 }
-.posts-table tr:last-child td {
-  border-bottom: none;
+
+.posts-table a:after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: var(--accent-color);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+
+.posts-table a:hover:after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 .back-button-container {
@@ -182,39 +219,55 @@ code {
   border-radius: 4px;
   font-size: 1rem;
   border: 2px solid var(--primary-color);
-} 
+}
 
-@media (max-width: 768px) {
-  html {
-    font-size: 14px;
+@media (max-width: 834px) {
+  :root {
+    --font-size: 16px;
+    --spacing: 1.5rem;
   }
 
-  body {
-    padding: var(--spacing);
+  .section-header {
+    font-size: 22px;
   }
 
-  main {
-    font-size: 1rem;
+  h1 {
+    font-size: 40px;
   }
 
-  .posts-table th,
-  .posts-table td {
-    padding: 0.75rem;
+  h2 {
+    font-size: 28px;
+  }
+
+  .bio {
+    font-size: 19px;
   }
 }
 
 @media (max-width: 480px) {
-  html {
-    font-size: 12px;
+  :root {
+    --font-size: 15px;
+    --spacing: 1.25rem;
+  }
+
+  .section-header {
+    font-size: 20px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .bio {
+    font-size: 17px;
   }
 
   body {
-    padding: 1rem;
-  }
-
-  .posts-table th,
-  .posts-table td {
-    padding: 0.5rem;
+    padding: var(--spacing);
   }
 }
 
@@ -257,4 +310,17 @@ hr {
   text-align: center;
   margin-top: var(--spacing);
   padding-top: var(--spacing);
+}
+
+.section-header {
+  font-size: 24px;
+  color: var(--primary-color);
+  margin-top: var(--spacing);
+  margin-bottom: calc(var(--spacing) * 0.5);
+  padding-bottom: calc(var(--spacing) * 0.25);
+  border-bottom: 1px solid var(--accent-color);
+}
+
+.section-header:first-child {
+  margin-top: 0;
 }

@@ -1,2 +1,18 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# OS files
 .DS_Store
-index.html.tmp
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,0 +1,14 @@
+{
+  "name": "jordanjoecooper-blog",
+  "version": "1.0.0",
+  "description": "Personal blog of Jordan Joe Cooper",
+  "private": true,
+  "scripts": {
+    "new-post": "node scripts/new-post.js",
+    "update-homepage": "node scripts/update_homepage.js",
+    "update-sitemap": "node scripts/update_sitemap.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12"
+  }
+}

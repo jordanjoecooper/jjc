@@ -1,45 +1,41 @@
 #!/bin/bash
 
-# Get the git hooks directory
-HOOKS_DIR="$(git rev-parse --git-dir)/hooks"
+HOOKS_DIR=".git/hooks"
+SCRIPTS_DIR="scripts"
 
-# Create the pre-commit hook
-cat << 'EOF' > "$HOOKS_DIR/pre-commit"
+# Create pre-commit hook
+cat > "${HOOKS_DIR}/pre-commit" << 'EOL'
 #!/bin/bash
 
-# Get the repository root directory
-REPO_ROOT=$(git rev-parse --show-toplevel)
-INDEX_FILE="$REPO_ROOT/index.html"
+# Get the current date and time
+DATE=$(date '+%B %d, %Y at %H:%M')
 
-# Update last-updated timestamp
-current_datetime=$(date "+%B %d, %Y at %H:%M")
-
-if [ -f "$INDEX_FILE" ]; then
-    TEMP_FILE=$(mktemp)
-    
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -E "/<div class=\"last-updated\">/c\\
-        <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE" > "$TEMP_FILE"
-        mv "$TEMP_FILE" "$INDEX_FILE"
-    else
-        sed -i "/<div class=\"last-updated\">/c\\    <div class=\"last-updated\">Last updated: ${current_datetime}</div>" "$INDEX_FILE"
-    fi
-    
-    rm -f "$TEMP_FILE"
-    git add "$INDEX_FILE"
-    echo "Updated last-updated timestamp to: $current_datetime"
-fi
+# Update the last updated timestamp in index.html
+sed -i '' "s/<div class=\"last-updated\">.*<\/div>/<div class=\"last-updated\">Last updated: ${DATE}<\/div>/" index.html
 
 # Update sitemap
-node "$REPO_ROOT/scripts/update_sitemap.js"
-if [ $? -eq 0 ]; then
-    git add "$REPO_ROOT/sitemap.xml"
-    echo "Updated sitemap.xml"
+node scripts/update_sitemap.js
+
+# Stage the modified files
+git add index.html sitemap.xml
+EOL
+
+# Create pre-push hook
+cat > "${HOOKS_DIR}/pre-push" << 'EOL'
+#!/bin/bash
+
+echo "Updating homepage with latest articles..."
+node scripts/update_homepage.js
+
+# Stage and commit the changes if there are any
+if [[ -n $(git status -s) ]]; then
+    git add index.html
+    git commit -m "Update homepage with latest articles"
 fi
+EOL
 
-EOF
+# Make hooks executable
+chmod +x "${HOOKS_DIR}/pre-commit"
+chmod +x "${HOOKS_DIR}/pre-push"
 
-# Make the pre-commit hook executable
-chmod +x "$HOOKS_DIR/pre-commit"
-
-echo "Git pre-commit hook installed successfully"
+echo "Git hooks installed successfully!"
