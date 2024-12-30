@@ -33,7 +33,7 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
     <nav>
       <a href="/" class="logo">J</a>
       <div class="nav-links">
-        <a href="/#about">About</a>
+        <a href="../about.html">About</a>
       </div>
     </nav>
 

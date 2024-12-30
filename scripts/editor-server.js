@@ -41,7 +41,7 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
     <nav>
       <a href="/" class="logo">J</a>
       <div class="nav-links">
-        <a href="/#about">About</a>
+        <a href="/about.html">About</a>
       </div>
     </nav>
 
@@ -81,13 +81,11 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
 
 const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
 <!-- Description: ${metadata.description} -->
-<!-- Section: Library -->
+<!-- Author: ${metadata.author} -->
 <!-- Tags: ${metadata.tags} -->
 <!-- Updated: ${metadata.updated} -->
 <!-- Created: ${metadata.created} -->
-<!-- Type: library -->
-<!-- Author: ${metadata.author} -->
-<!-- Cover: ${metadata.bookCover} -->
+<!-- Type: book -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,8 +94,7 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
   <meta name="description" content="${metadata.description}">
   <meta name="keywords" content="${metadata.tags}">
   <meta property="og:title" content="${metadata.title} - Jordan Joe Cooper">
-  <meta property="og:type" content="book">
-  <meta property="og:image" content="${metadata.bookCover}">
+  <meta property="og:type" content="article">
   <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
@@ -113,7 +110,7 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
     <nav>
       <a href="/" class="logo">J</a>
       <div class="nav-links">
-        <a href="/#about">About</a>
+        <a href="../about.html">About</a>
       </div>
     </nav>
 
@@ -123,13 +120,15 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       <div class="post-metadata-header">
         <span>Library</span>
         <span>•</span>
-        <span>Jordan Joe Cooper</span>
+        <span>${metadata.author}</span>
+        <span>•</span>
+        <time>${metadata.created}</time>
       </div>
     </header>
 
     <main>
       <div class="book-cover-container">
-        <img src="${metadata.bookCover}" alt="Cover of ${metadata.title}" class="book-cover-image">
+        <img src="../images/books/${metadata.id}.jpg" alt="Cover of ${metadata.title}" class="book-cover-image">
         <h2 class="book-author">by ${metadata.author}</h2>
       </div>
 
@@ -436,16 +435,26 @@ app.put('/api/posts/:id', upload.none(), (req, res) => {
     const { title, content, description, tags, section, type, author, bookCover } = req.body;
     const fileName = `${req.params.id}.html`;
 
-    // Determine the file path based on section
-    const postsDir = path.join(__dirname, '..', 'posts');
-    const libraryDir = path.join(__dirname, '..', 'library');
-    const isLibrary = section === 'Library';
-    const targetDir = isLibrary ? libraryDir : postsDir;
+    // First check if the file exists in either directory
+    const postsPath = path.join(__dirname, '..', 'posts', fileName);
+    const libraryPath = path.join(__dirname, '..', 'library', fileName);
 
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+    let existingPath;
+    let isLibrary;
+
+    if (fs.existsSync(postsPath)) {
+      existingPath = postsPath;
+      isLibrary = false;
+    } else if (fs.existsSync(libraryPath)) {
+      existingPath = libraryPath;
+      isLibrary = true;
+    } else {
+      return res.status(404).json({ error: 'File not found' });
     }
+
+    // Read the existing file to get its metadata
+    const originalContent = fs.readFileSync(existingPath, 'utf8');
+    const originalMetadata = parsePostMetadata(originalContent);
 
     // Generate metadata
     const now = new Date().toLocaleDateString('en-US', {
@@ -457,23 +466,23 @@ app.put('/api/posts/:id', upload.none(), (req, res) => {
     const metadata = {
       title,
       description,
-      section,
+      section: isLibrary ? 'Library' : (section || 'Notes'),
       tags: tags || '',
+      created: originalMetadata.created || now,
       updated: now,
       content,
       type: isLibrary ? 'library' : 'note'
     };
 
-    // Add library-specific fields
+    // Add library-specific fields if it's a library item
     if (isLibrary) {
-      metadata.author = author;
-      metadata.bookCover = bookCover;
+      metadata.author = author || originalMetadata.author;
+      metadata.bookCover = bookCover || originalMetadata.bookCover;
     }
 
     // Use the appropriate template
     const template = isLibrary ? libraryTemplate : postTemplate;
-    const filePath = path.join(targetDir, fileName);
-    fs.writeFileSync(filePath, template(metadata));
+    fs.writeFileSync(existingPath, template(metadata));
 
     res.json({ success: true });
   } catch (error) {
