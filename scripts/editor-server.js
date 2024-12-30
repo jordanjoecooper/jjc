@@ -24,7 +24,8 @@ function parsePostMetadata(content) {
     updated: content.match(/<!--\s*Updated:\s*(.*?)\s*-->/s)?.[1],
     description: content.match(/<!--\s*Description:\s*(.*?)\s*-->/s)?.[1],
     section: content.match(/<!--\s*Section:\s*(.*?)\s*-->/s)?.[1],
-    tags: content.match(/<!--\s*Tags:\s*(.*?)\s*-->/s)?.[1]
+    tags: content.match(/<!--\s*Tags:\s*(.*?)\s*-->/s)?.[1],
+    type: content.match(/<!--\s*Type:\s*(.*?)\s*-->/s)?.[1] // Add type for distinguishing books
   };
 
   // Fallback to meta tags if needed
@@ -53,6 +54,7 @@ function parsePostMetadata(content) {
   metadata.created = metadata.created || metadata.date;
   metadata.updated = metadata.updated || metadata.date;
   metadata.section = metadata.section || 'Uncategorized';
+  metadata.type = metadata.type || (metadata.section === 'Library' ? 'book' : 'post');
 
   // Clean up title if it includes the site name
   if (metadata.title && metadata.title.includes(' - Jordan Joe Cooper')) {
@@ -116,7 +118,7 @@ app.get('/api/posts/:id', (req, res) => {
 // Update existing post
 app.put('/api/posts/:id', async (req, res) => {
   try {
-    const { title, description, tags, section, content } = req.body;
+    const { title, description, tags, section, content, type } = req.body;
     const filePath = path.join(__dirname, '..', 'posts', `${req.params.id}.html`);
 
     // Read existing file to get creation date
@@ -150,6 +152,7 @@ app.put('/api/posts/:id', async (req, res) => {
   <!-- Description: ${description} -->
   <!-- Section: ${section} -->
   <!-- Tags: ${tags} -->
+  <!-- Type: ${type || (section === 'Library' ? 'book' : 'post')} -->
   <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
