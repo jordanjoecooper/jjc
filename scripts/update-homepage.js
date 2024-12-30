@@ -54,48 +54,22 @@ async function updateHomepage() {
           cover,
           file: file
         });
+      } else {
+        console.log('Warning: No title found for library item:', file);
+        console.log('Title meta match:', titleMetaMatch);
+        console.log('Title comment match:', titleMatch);
+        console.log('Content preview:', content.substring(0, 500));
       }
     }
   }
 
-  // Read regular posts
-  const files = fs.readdirSync(postsDir);
-  for (const file of files) {
-    if (file.endsWith('.html') && file !== 'index.html') {
-      const filePath = path.join(postsDir, file);
-      const content = fs.readFileSync(filePath, 'utf8');
-
-      // Extract metadata from meta tags first, then fall back to comments
-      const sectionMetaMatch = content.match(/<meta\s+name="section"\s+content="([^"]+)"/);
-      const titleMetaMatch = content.match(/<title[^>]*>([^<]+)<\/title>/);
-      const descMetaMatch = content.match(/<meta\s+name="description"\s+content="([^"]+)"/);
-
-      // Extract metadata from HTML comments as fallback
-      const titleMatch = content.match(/<!--\s*Title:\s*(.*?)\s*-->/);
-      const dateMatch = content.match(/<!--\s*Date:\s*(.*?)\s*-->/);
-      const descriptionMatch = content.match(/<!--\s*Description:\s*(.*?)\s*-->/);
-      const sectionMatch = content.match(/<!--\s*Section:\s*(.*?)\s*-->/);
-
-      const title = (titleMetaMatch?.[1] || titleMatch?.[1])?.replace(' - Jordan Joe Cooper', '');
-      const date = new Date(dateMatch?.[1] || 'December 1, 2024');
-      const description = descMetaMatch?.[1] || descriptionMatch?.[1] || '';
-      const section = sectionMetaMatch?.[1] || sectionMatch?.[1] || 'Technology';
-
-      if (title && section !== 'Library') {  // Skip library items in posts directory
-        posts.push({
-          title,
-          date,
-          description,
-          section,
-          file
-        });
-      }
-    }
-  }
+  console.log('Final library items:', libraryItems);
 
   // Sort posts by date
   posts.sort((a, b) => b.date - a.date);
   libraryItems.sort((a, b) => b.date - a.date);
+
+  console.log('Sorted library items:', libraryItems);
 
   // Generate HTML
   let html = `<!DOCTYPE html>
@@ -145,12 +119,12 @@ async function updateHomepage() {
 
     <!-- Add Library section first -->
     ${libraryItems.length > 0 ? `
-      <div class="notes-section">
+      <div class="section">
         <h2 class="section-header">Library</h2>
         <p>Books I've read and my notes on them.</p>
         <div class="library-grid">
           ${libraryItems.map(item => `
-            <a href="library/${item.file}" class="book ${item.cover ? 'has-cover' : ''}">
+            <a href="/library/${item.file}" class="book ${item.cover ? 'has-cover' : ''}">
               ${item.cover ? `
                 <div class="book-cover" style="background-image: url('${item.cover}')"></div>
                 <div class="book-info">
@@ -170,7 +144,7 @@ async function updateHomepage() {
     ` : ''}
 
     <!-- Add other sections -->
-    ${SECTIONS.map(section => {
+    ${SECTIONS.filter(section => section !== 'Library').map(section => {
       const sectionPosts = posts.filter(post => post.section === section);
       if (sectionPosts.length > 0) {
         return `
@@ -192,6 +166,7 @@ async function updateHomepage() {
           </table>
         `;
       }
+      return '';
     }).join('\n')}
   </main>
   <div class="last-updated">Last updated: ${new Date().toLocaleDateString('en-US', {
@@ -204,7 +179,7 @@ async function updateHomepage() {
 </body>
 </html>`;
 
-  fs.writeFileSync(path.join(process.cwd(), 'posts', 'index.html'), html);
+  fs.writeFileSync(path.join(process.cwd(), 'index.html'), html);
   console.log('Homepage updated successfully');
 
   // Update sitemap
@@ -216,7 +191,7 @@ function generateLibrarySection(libraryPosts) {
   if (!libraryPosts.length) return '';
 
   return `
-    <div class="notes-section">
+    <div class="section">
       <h2 class="section-header">Library</h2>
       <p>Books I've read and my notes on them.</p>
       <div class="library-grid">

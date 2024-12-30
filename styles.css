@@ -382,6 +382,7 @@ hr {
   gap: 2rem;
   padding: 2rem 0;
   width: 100%;
+  margin: 0 auto;
 }
 
 .book {
@@ -389,6 +390,8 @@ hr {
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
+  border: none;
 }
 
 .book-cover {
