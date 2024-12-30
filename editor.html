@@ -338,14 +338,28 @@
 
           <div class="input-group">
             <label for="section">Section</label>
-            <select id="section">
+            <select id="section" onchange="toggleBookFields()">
               <option value="Technology">Technology</option>
               <option value="Musings">Musings</option>
+              <option value="Notes">Notes</option>
               <option value="Work">Work</option>
               <option value="Library">Library</option>
               <option value="Chaos">Chaos</option>
               <option value="IDK">I don't know yet</option>
             </select>
+          </div>
+
+          <div id="bookFields" style="display: none;">
+            <div class="input-group">
+              <label for="author">Author</label>
+              <input type="text" id="author" placeholder="Enter book author">
+            </div>
+
+            <div class="input-group">
+              <label for="bookCover">Book Cover Image</label>
+              <input type="file" id="bookCover" accept="image/*">
+              <div class="help-text">Recommended size: 600x800px. Will be displayed at 3:4 ratio.</div>
+            </div>
           </div>
 
           <div class="editor-toolbar">
@@ -455,6 +469,13 @@
         document.getElementById('tags').value = post.tags;
         document.getElementById('section').value = post.section;
         document.getElementById('editor').innerHTML = post.content;
+
+        // Handle book-specific fields
+        if (post.section === 'Library') {
+          document.getElementById('author').value = post.author || '';
+          toggleBookFields();
+        }
+
         document.getElementById('editorForm').classList.add('active');
       } catch (error) {
         console.error('Error loading post:', error);
@@ -467,6 +488,9 @@
       document.getElementById('tags').value = '';
       document.getElementById('section').value = 'Technology';
       document.getElementById('editor').innerHTML = '';
+      document.getElementById('author').value = '';
+      document.getElementById('bookCover').value = '';
+      toggleBookFields();
     }
 
     function formatText(tag) {
@@ -527,48 +551,67 @@
       const description = document.getElementById('description').value;
       const tags = document.getElementById('tags').value;
       const section = document.getElementById('section').value;
-      const content = document.getElementById('editor').innerHTML
-        .replace(/<p><br><\/p>/g, '<p></p>')
-        .replace(/<p><\/p>/g, '<p>&nbsp;</p>')
-        .replace(/^<br>|<br>$/g, '');
+      const content = document.getElementById('editor').innerHTML;
+      const author = document.getElementById('author').value;
+      const bookCover = document.getElementById('bookCover').files[0];
 
       if (!title || !description || !content) {
         alert('Please fill in all required fields');
         return;
       }
 
-      const postData = {
-        id: currentPostId,
-        title,
-        description,
-        tags,
-        section,
-        content
-      };
+      if (section === 'Library' && !author) {
+        alert('Please enter the book author');
+        return;
+      }
+
+      // Create FormData for multipart/form-data submission
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('tags', tags);
+      formData.append('section', section);
+      formData.append('content', content);
+
+      if (section === 'Library') {
+        formData.append('author', author);
+        if (bookCover) {
+          formData.append('bookCover', bookCover);
+        }
+      }
 
       try {
-        const endpoint = currentPostId ? `/api/posts/${currentPostId}` : '/api/create-post';
-        const method = currentPostId ? 'PUT' : 'POST';
+        let endpoint;
+        if (currentPostId) {
+          endpoint = `/api/posts/${currentPostId}`;
+        } else if (section === 'Library') {
+          endpoint = '/api/create-library-item';
+        } else {
+          endpoint = '/api/create-post';
+        }
 
         const response = await fetch(endpoint, {
-          method,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(postData)
+          method: currentPostId ? 'PUT' : 'POST',
+          body: formData
         });
 
         if (response.ok) {
-          alert(currentPostId ? 'Post updated successfully!' : 'Post created successfully!');
-          await loadPosts();
+          const result = await response.json();
+          alert(result.message || 'Saved successfully!');
           window.location.href = '/';
         } else {
-          throw new Error(currentPostId ? 'Failed to update post' : 'Failed to create post');
+          throw new Error('Failed to save');
         }
       } catch (error) {
-        console.error('Error saving post:', error);
-        alert('Failed to save post. Please try again.');
+        console.error('Error saving:', error);
+        alert('Failed to save. Please try again.');
       }
+    }
+
+    function toggleBookFields() {
+      const section = document.getElementById('section').value;
+      const bookFields = document.getElementById('bookFields');
+      bookFields.style.display = section === 'Library' ? 'block' : 'none';
     }
   </script>
 </body>
