@@ -124,7 +124,7 @@ async function updateHomepage() {
         <p>Books I've read and my notes on them.</p>
         <div class="library-grid">
           ${libraryItems.map(item => `
-            <a href="/library/${item.file}" class="book ${item.cover ? 'has-cover' : ''}">
+            <a href="library/${item.file}" class="book ${item.cover ? 'has-cover' : ''}">
               ${item.cover ? `
                 <div class="book-cover" style="background-image: url('${item.cover}')"></div>
                 <div class="book-info">

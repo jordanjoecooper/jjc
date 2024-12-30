@@ -174,7 +174,7 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
   <meta name="description" content="${description}">
   <meta name="keywords" content="${tags}">
   <meta property="og:title" content="${title} - Jordan Joe Cooper">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="${section === 'Library' ? 'book' : 'website'}">
   <meta property="og:image" content="${bookCoverPath || '../images/apple-touch-icon.png'}">
   <meta name="section" content="${section}">
   <!-- Metadata -->
@@ -198,11 +198,9 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
 <body>
   <header class="post-heading">
     <h1>${title}</h1>
+    ${section === 'Library' && author ? `<h2 class="book-author">by ${author}</h2>` : ''}
     <div class="post-time">
-      <time>${createdDate}</time> by <a href="https://jordanjoecooper.dev">Jordan Joe Cooper</a>
-      <div class="post-metadata">
-        Last updated: <time>${formattedDate}</time>
-      </div>
+      <time>${formattedDate}</time>
     </div>
   </header>
   <main>
@@ -244,15 +242,103 @@ app.post('/api/create-post', upload.single('bookCover'), async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Process book cover if provided
-    let bookCoverPath = '';
-    if (req.file) {
-      const postId = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const filename = `${postId}${path.extname(req.file.originalname)}`;
-      bookCoverPath = await processBookCover(req.file.buffer, filename);
+    // If this is a library item, use the library item creation logic
+    if (section === 'Library') {
+      const itemId = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const filePath = path.join(__dirname, '..', 'library', `${itemId}.html`);
+
+      // Process book cover if provided
+      let bookCoverPath = '';
+      if (req.file) {
+        const filename = `${itemId}${path.extname(req.file.originalname)}`;
+        bookCoverPath = await processBookCover(req.file.buffer, filename);
+        // Convert absolute path to relative for library items
+        bookCoverPath = '..' + bookCoverPath;
+      }
+
+      const date = new Date();
+      const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      // Create library directory if it doesn't exist
+      const libraryDir = path.join(__dirname, '..', 'library');
+      if (!fs.existsSync(libraryDir)) {
+        fs.mkdirSync(libraryDir, { recursive: true });
+      }
+
+      const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="${description}">
+  <meta name="keywords" content="${tags}">
+  <meta property="og:title" content="${title} - Jordan Joe Cooper">
+  <meta property="og:type" content="book">
+  <meta property="og:image" content="${bookCoverPath || '../images/apple-touch-icon.png'}">
+  <!-- Book Metadata -->
+  <!-- Title: ${title} -->
+  <!-- Author: ${author} -->
+  <!-- Cover: ${bookCoverPath} -->
+  <!-- Date: ${formattedDate} -->
+  <!-- Created: ${formattedDate} -->
+  <!-- Updated: ${formattedDate} -->
+  <!-- Description: ${description} -->
+  <!-- Tags: ${tags} -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+  <title>${title} - Jordan Joe Cooper</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="post-heading">
+    <h1>${title}</h1>
+    <div class="post-time">
+      <time>${formattedDate}</time> by <a href="https://jordanjoecooper.dev">Jordan Joe Cooper</a>
+      <div class="post-metadata">
+        Last updated: <time>${formattedDate}</time>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="book-cover-container">
+      <img src="${bookCoverPath}" alt="Cover of ${title}" class="book-cover-image">
+      <h2 class="book-author">by ${author}</h2>
+    </div>
+    <div class="book-content">
+      ${content}
+    </div>
+    <div class="back-button-container">
+      <a href="https://jordanjoecooper.dev" class="back-button">Back</a>
+    </div>
+  </main>
+</body>
+</html>`;
+
+      fs.writeFileSync(filePath, template);
+      console.log(`Created library item: ${filePath}`);
+
+      // Update homepage and sitemap
+      try {
+        await updateHomepage();
+        await generateSitemap();
+        console.log('Homepage and sitemap updated successfully');
+      } catch (error) {
+        console.error('Error updating homepage/sitemap:', error);
+      }
+
+      return res.json({
+        success: true,
+        message: 'Library item created successfully'
+      });
     }
 
-    // Set up environment variables for the new-post script
+    // For non-library posts, use the existing new-post script
     const env = {
       ...process.env,
       POST_TITLE: title,
@@ -260,8 +346,7 @@ app.post('/api/create-post', upload.single('bookCover'), async (req, res) => {
       POST_TAGS: tags || '',
       POST_SECTION: section || 'Technology',
       POST_CONTENT: content,
-      POST_AUTHOR: author || '',
-      POST_BOOK_COVER: bookCoverPath || ''
+      POST_AUTHOR: author || ''
     };
 
     // Run new-post script
@@ -311,115 +396,6 @@ app.post('/api/create-post', upload.single('bookCover'), async (req, res) => {
     console.error('Error creating post:', error);
     res.status(500).json({
       error: 'Failed to create post',
-      details: error.message
-    });
-  }
-});
-
-// Create new library item
-app.post('/api/create-library-item', upload.single('bookCover'), async (req, res) => {
-  try {
-    const { title, description, tags, content, author } = req.body;
-
-    if (!title || !description || !content || !author) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Process book cover
-    let bookCoverPath = '';
-    if (req.file) {
-      const itemId = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const filename = `${itemId}${path.extname(req.file.originalname)}`;
-      bookCoverPath = await processBookCover(req.file.buffer, filename);
-    }
-
-    const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const itemId = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const filePath = path.join(__dirname, '..', 'library', `${itemId}.html`);
-
-    // Create library directory if it doesn't exist
-    const libraryDir = path.join(__dirname, '..', 'library');
-    if (!fs.existsSync(libraryDir)) {
-      fs.mkdirSync(libraryDir, { recursive: true });
-    }
-
-    const template = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="${description}">
-  <meta name="keywords" content="${tags}">
-  <meta property="og:title" content="${title} - Jordan Joe Cooper">
-  <meta property="og:type" content="book">
-  <meta property="og:image" content="${bookCoverPath || '../images/apple-touch-icon.png'}">
-  <!-- Book Metadata -->
-  <!-- Title: ${title} -->
-  <!-- Author: ${author} -->
-  <!-- Cover: ${bookCoverPath} -->
-  <!-- Date: ${formattedDate} -->
-  <!-- Created: ${formattedDate} -->
-  <!-- Updated: ${formattedDate} -->
-  <!-- Description: ${description} -->
-  <!-- Tags: ${tags} -->
-  <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
-  <link rel="manifest" href="../site.webmanifest">
-  <title>${title} - Jordan Joe Cooper</title>
-  <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
-  <header class="post-heading">
-    <h1>${title}</h1>
-    <h2 class="book-author">by ${author}</h2>
-    <div class="post-time">
-      <time>${formattedDate}</time>
-    </div>
-  </header>
-  <main>
-    ${bookCoverPath ? `
-    <div class="book-cover-container">
-      <img src="${bookCoverPath}" alt="Cover of ${title}" class="book-cover-image">
-    </div>
-    ` : ''}
-    <div class="book-content">
-      ${content}
-    </div>
-    <div class="back-button-container">
-      <a href="https://jordanjoecooper.dev" class="back-button">Back</a>
-    </div>
-  </main>
-</body>
-</html>`;
-
-    fs.writeFileSync(filePath, template);
-    console.log(`Created library item: ${filePath}`);
-
-    // Update homepage and sitemap
-    try {
-      await updateHomepage();
-      await generateSitemap();
-      console.log('Homepage and sitemap updated successfully');
-    } catch (error) {
-      console.error('Error updating homepage/sitemap:', error);
-      // Continue with the response even if homepage update fails
-    }
-
-    res.json({
-      success: true,
-      message: 'Library item created successfully'
-    });
-  } catch (error) {
-    console.error('Error creating library item:', error);
-    res.status(500).json({
-      error: 'Failed to create library item',
       details: error.message
     });
   }
