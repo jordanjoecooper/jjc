@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio');
+const { updateHomepage } = require('./update-homepage.js');
+const { generateSitemap } = require('./update-sitemap.js');
 
 function fixPaths() {
   const postsDir = path.join(__dirname, '..', 'posts');

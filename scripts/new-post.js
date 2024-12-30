@@ -1,13 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { generateSitemap } = require('./update-sitemap.js');
+const { updateHomepage } = require('./update-homepage.js');
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-const SECTIONS = ['Technology', 'Musings', 'Work'];
+const SECTIONS = ['Technology', 'Musings', 'Work', 'Library', 'Chaos', 'IDK'];
 
 function slugify(text) {
   return text
@@ -27,6 +29,18 @@ function formatDate(date) {
 }
 
 async function promptUser() {
+  // If we have environment variables from the editor, use those
+  if (process.env.POST_TITLE) {
+    return {
+      title: process.env.POST_TITLE,
+      description: process.env.POST_DESCRIPTION,
+      tags: process.env.POST_TAGS,
+      section: process.env.POST_SECTION,
+      content: process.env.POST_CONTENT
+    };
+  }
+
+  // Otherwise, prompt the user
   const questions = {
     title: 'Enter post title: ',
     description: 'Enter post description (for meta tags): ',
@@ -74,6 +88,14 @@ async function createNewPost() {
   <meta property="og:type" content="website">
   <meta property="og:image" content="../images/apple-touch-icon.png">
   <meta name="section" content="${answers.section}">
+  <!-- Metadata -->
+  <!-- Title: ${answers.title} -->
+  <!-- Date: ${formattedDate} -->
+  <!-- Created: ${formattedDate} -->
+  <!-- Updated: ${formattedDate} -->
+  <!-- Description: ${answers.description} -->
+  <!-- Section: ${answers.section} -->
+  <!-- Tags: ${answers.tags} -->
   <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
@@ -86,11 +108,14 @@ async function createNewPost() {
     <h1>${answers.title}</h1>
     <div class="post-time">
       <time>${formattedDate}</time> by <a href="https://jordanjoecooper.dev">Jordan Joe Cooper</a>
+      <div class="post-metadata">
+        Last updated: <time>${formattedDate}</time>
+      </div>
     </div>
   </header>
   <main>
     <div>
-      <!-- Your content here -->
+      ${answers.content || '<!-- Your content here -->'}
     </div>
     <div class="back-button-container">
       <a href="https://jordanjoecooper.dev" class="back-button">Back</a>
@@ -103,14 +128,14 @@ async function createNewPost() {
   console.log(`Created new post: ${filePath}`);
 
   // Update homepage
-  const updateHomepage = require('./update_homepage.js');
   await updateHomepage();
 
   // Update sitemap
-  const updateSitemap = require('./update_sitemap.js');
-  updateSitemap();
+  await generateSitemap();
 
-  rl.close();
+  if (rl.close) {
+    rl.close();
+  }
 }
 
 createNewPost().catch(console.error);

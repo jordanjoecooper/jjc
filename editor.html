@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post Editor - Jordan Joe Cooper</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Editor-specific styles */
+    .editor-container {
+      max-width: 100%;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    .editor-header {
+      margin-bottom: 2rem;
+      max-width: 100%;
+    }
+
+    .editor-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      width: 100%;
+    }
+
+    .editor-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .input-group label {
+      font-weight: 500;
+      color: var(--primary-color);
+    }
+
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: var(--body-font);
+      font-size: var(--font-size);
+    }
+
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--accent-color);
+      width: 100%;
+    }
+
+    .toolbar-button {
+      padding: 0.5rem 1rem;
+      background: none;
+      border: 1px solid var(--accent-color);
+      border-radius: 4px;
+      color: var(--accent-color);
+      font-family: var(--body-font);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .toolbar-button:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    #editor {
+      width: 100%;
+      min-height: 600px;
+      padding: 2rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: var(--body-font);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+      outline: none;
+      background: #fff;
+      overflow-y: auto;
+      word-wrap: break-word;
+    }
+
+    #editor:focus {
+      border-color: var(--accent-color);
+    }
+
+    #editor p {
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      font-weight: normal;
+    }
+
+    #editor h2 {
+      font-size: 2rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    #editor h3 {
+      font-size: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    #editor ul,
+    #editor ol {
+      margin-bottom: 1.5rem;
+      padding-left: 2rem;
+    }
+
+    #editor li {
+      margin-bottom: 0.5rem;
+    }
+
+    #editor code {
+      font-family: 'SF Mono', Consolas, Monaco, 'Andale Mono', monospace;
+      background-color: #f1f1f1;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    #editor a {
+      color: var(--accent-color);
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent-color);
+    }
+
+    #editor strong {
+      font-weight: 600;
+    }
+
+    #editor em {
+      font-style: italic;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+
+    .save-button {
+      padding: 0.75rem 1.5rem;
+      background: var(--accent-color);
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-family: var(--body-font);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .save-button:hover {
+      background: var(--accent-color-dark);
+    }
+
+    @media (max-width: 1024px) {
+      .editor-container {
+        padding: 1rem;
+      }
+
+      .editor-main {
+        grid-template-columns: 1fr;
+      }
+
+      #preview {
+        margin-top: 2rem;
+      }
+
+      #editor,
+      #preview {
+        min-height: 400px;
+      }
+    }
+
+    .post-list {
+      margin-bottom: 2rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .post-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .post-list-title {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .new-post-button {
+      padding: 0.5rem 1rem;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--body-font);
+      transition: background 0.2s ease;
+    }
+
+    .new-post-button:hover {
+      background: var(--accent-color-dark);
+    }
+
+    .post-list-items {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .post-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .post-item:hover {
+      background: #f9f9f9;
+    }
+
+    .post-item:last-child {
+      border-bottom: none;
+    }
+
+    .post-item-title {
+      font-weight: 500;
+    }
+
+    .post-item-meta {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .post-item-section {
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      background: #eee;
+    }
+
+    .editor-form {
+      display: none;
+    }
+
+    .editor-form.active {
+      display: block;
+    }
+
+    /* Add styles for the metadata display */
+    .post-metadata {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    .post-metadata time {
+      color: var(--accent-color);
+    }
+
+    .error-message {
+      color: #dc3545;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .no-posts {
+      padding: 1rem;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="editor-container">
+    <header class="editor-header">
+      <h1>Post Editor</h1>
+    </header>
+
+    <div class="post-list">
+      <div class="post-list-header">
+        <h2 class="post-list-title">Posts</h2>
+        <button class="new-post-button" onclick="createNewPost()">New Post</button>
+      </div>
+      <div class="post-list-items" id="postList">
+        <!-- Posts will be loaded here -->
+      </div>
+    </div>
+
+    <div id="editorForm" class="editor-form">
+      <div class="editor-main">
+        <div class="editor-section">
+          <div class="input-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" placeholder="Enter post title">
+          </div>
+
+          <div class="input-group">
+            <label for="description">Description (for meta tags)</label>
+            <input type="text" id="description" placeholder="Enter post description">
+          </div>
+
+          <div class="input-group">
+            <label for="tags">Tags (comma-separated)</label>
+            <input type="text" id="tags" placeholder="tech, programming, thoughts">
+          </div>
+
+          <div class="input-group">
+            <label for="section">Section</label>
+            <select id="section">
+              <option value="Technology">Technology</option>
+              <option value="Musings">Musings</option>
+              <option value="Work">Work</option>
+              <option value="Library">Library</option>
+              <option value="Chaos">Chaos</option>
+              <option value="IDK">I don't know yet</option>
+            </select>
+          </div>
+
+          <div class="editor-toolbar">
+            <button class="toolbar-button" onclick="formatText('h2')">H2</button>
+            <button class="toolbar-button" onclick="formatText('h3')">H3</button>
+            <button class="toolbar-button" onclick="formatText('p')">P</button>
+            <button class="toolbar-button" onclick="formatText('strong')">Bold</button>
+            <button class="toolbar-button" onclick="formatText('em')">Italic</button>
+            <button class="toolbar-button" onclick="formatText('ul')">List</button>
+            <button class="toolbar-button" onclick="formatText('code')">Code</button>
+            <button class="toolbar-button" onclick="formatText('a')">Link</button>
+          </div>
+
+          <div contenteditable="true" id="editor"></div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="save-button" onclick="savePost()">Save Post</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPostId = null;
+    let posts = [];
+
+    // Load posts when the page loads
+    window.addEventListener('load', loadPosts);
+
+    async function loadPosts() {
+      const postList = document.getElementById('postList');
+      try {
+        postList.innerHTML = 'Loading posts...';
+        const response = await fetch('/api/posts');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        posts = data;
+        renderPostList();
+      } catch (error) {
+        console.error('Error loading posts:', error);
+        postList.innerHTML = `<div class="error-message">Error loading posts: ${error.message}</div>`;
+      }
+    }
+
+    function renderPostList() {
+      const postList = document.getElementById('postList');
+      if (!posts || posts.length === 0) {
+        postList.innerHTML = '<div class="no-posts">No posts found</div>';
+        return;
+      }
+
+      postList.innerHTML = posts.map(post => {
+        const title = post.title || post.id.replace(/-/g, ' ');
+        const created = formatDate(post.created || post.date);
+        const updated = formatDate(post.updated || post.date);
+        const section = post.section || 'Uncategorized';
+
+        return `
+          <div class="post-item" onclick="editPost('${post.id}')">
+            <div>
+              <div class="post-item-title">${title}</div>
+              <div class="post-item-meta">
+                Created: ${created} • Updated: ${updated}
+              </div>
+            </div>
+            <span class="post-item-section">${section}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'Unknown';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function createNewPost() {
+      currentPostId = null;
+      document.getElementById('editorForm').classList.add('active');
+      clearForm();
+    }
+
+    async function editPost(id) {
+      try {
+        const response = await fetch(`/api/posts/${id}`);
+        const post = await response.json();
+
+        currentPostId = id;
+        document.getElementById('title').value = post.title;
+        document.getElementById('description').value = post.description;
+        document.getElementById('tags').value = post.tags;
+        document.getElementById('section').value = post.section;
+        document.getElementById('editor').innerHTML = post.content;
+        document.getElementById('editorForm').classList.add('active');
+      } catch (error) {
+        console.error('Error loading post:', error);
+      }
+    }
+
+    function clearForm() {
+      document.getElementById('title').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('tags').value = '';
+      document.getElementById('section').value = 'Technology';
+      document.getElementById('editor').innerHTML = '';
+    }
+
+    function formatText(tag) {
+      const editor = document.getElementById('editor');
+      const selection = window.getSelection();
+      const range = selection.getRangeAt(0);
+
+      if (tag === 'a') {
+        const url = prompt('Enter URL:');
+        if (url) {
+          const link = document.createElement('a');
+          link.href = url;
+          link.textContent = selection.toString() || url;
+          range.deleteContents();
+          range.insertNode(link);
+        }
+        return;
+      }
+
+      const element = document.createElement(tag);
+
+      // Handle list creation
+      if (tag === 'ul') {
+        const li = document.createElement('li');
+        li.innerHTML = selection.toString() || 'List item';
+        element.appendChild(li);
+        range.deleteContents();
+        range.insertNode(element);
+        // Add a new line after the list
+        const br = document.createElement('br');
+        element.parentNode.insertBefore(br, element.nextSibling);
+        return;
+      }
+
+      // Set text content and preserve formatting
+      if (selection.toString()) {
+        element.innerHTML = selection.toString();
+      } else {
+        if (tag === 'p') {
+          element.innerHTML = '<br>';
+        } else {
+          element.innerHTML = tag.toUpperCase() === tag ? tag : `${tag} text`;
+        }
+      }
+
+      range.deleteContents();
+      range.insertNode(element);
+
+      // Add a new line after the element
+      if (tag === 'p' || tag === 'h2' || tag === 'h3') {
+        const br = document.createElement('br');
+        element.parentNode.insertBefore(br, element.nextSibling);
+      }
+    }
+
+    async function savePost() {
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      const tags = document.getElementById('tags').value;
+      const section = document.getElementById('section').value;
+      const content = document.getElementById('editor').innerHTML
+        .replace(/<p><br><\/p>/g, '<p></p>')
+        .replace(/<p><\/p>/g, '<p>&nbsp;</p>')
+        .replace(/^<br>|<br>$/g, '');
+
+      if (!title || !description || !content) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      const postData = {
+        id: currentPostId,
+        title,
+        description,
+        tags,
+        section,
+        content
+      };
+
+      try {
+        const endpoint = currentPostId ? `/api/posts/${currentPostId}` : '/api/create-post';
+        const method = currentPostId ? 'PUT' : 'POST';
+
+        const response = await fetch(endpoint, {
+          method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(postData)
+        });
+
+        if (response.ok) {
+          alert(currentPostId ? 'Post updated successfully!' : 'Post created successfully!');
+          await loadPosts();
+          window.location.href = '/';
+        } else {
+          throw new Error(currentPostId ? 'Failed to update post' : 'Failed to create post');
+        }
+      } catch (error) {
+        console.error('Error saving post:', error);
+        alert('Failed to save post. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

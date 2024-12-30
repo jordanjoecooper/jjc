@@ -1,15 +1,16 @@
 {
-  "name": "jordanjoecooper-blog",
+  "name": "jcuk",
   "version": "1.0.0",
-  "description": "Personal blog of Jordan Joe Cooper",
-  "private": true,
+  "description": "Personal blog",
   "scripts": {
     "new-post": "node scripts/new-post.js",
-    "update-homepage": "node scripts/update_homepage.js",
-    "update-sitemap": "node scripts/update_sitemap.js",
-    "fix-paths": "node scripts/fix-paths.js"
+    "update-homepage": "node scripts/update-homepage.js",
+    "update-sitemap": "node scripts/update-sitemap.js",
+    "fix-paths": "node scripts/fix-paths.js",
+    "install-hooks": "bash scripts/install-hooks.sh",
+    "editor": "node scripts/editor-server.js"
   },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.12"
+    "express": "^4.18.2"
   }
 }

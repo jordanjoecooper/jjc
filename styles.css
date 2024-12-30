@@ -140,6 +140,15 @@ header h1 a:hover {
   line-height: 1.2;
 }
 
+.post-metadata {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.post-metadata time {
+  color: inherit;
+}
+
 main {
   font-size: var(--font-size);
   line-height: var(--line-height);
@@ -323,4 +332,122 @@ hr {
 
 .section-header:first-child {
   margin-top: 0;
+}
+
+/* Bookshelf styles */
+.bookshelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: var(--spacing);
+  position: relative;
+}
+
+.bookshelf::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background: #8b4513;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.book {
+  height: 200px;
+  background: var(--accent-color);
+  position: relative;
+  border-radius: 3px;
+  box-shadow:
+    inset -7px 0 10px rgba(0, 0, 0, 0.2),
+    1px 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  text-decoration: none;
+  border-bottom: none;
+}
+
+.book:hover {
+  transform: translateY(-5px);
+}
+
+.book::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px 0 0 3px;
+}
+
+.book::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 3px 3px 0;
+}
+
+.book-title {
+  color: white;
+  font-family: var(--heading-font);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  transform: rotate(-90deg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 0 0;
+  transform: rotate(-90deg) translate(-50%, -50%);
+}
+
+.book-date {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.7rem;
+  transform: rotate(-90deg);
+}
+
+/* Generate random book colors */
+.book:nth-child(5n+1) { background: #2c3e50; }
+.book:nth-child(5n+2) { background: #c0392b; }
+.book:nth-child(5n+3) { background: #27ae60; }
+.book:nth-child(5n+4) { background: #8e44ad; }
+.book:nth-child(5n+5) { background: #d35400; }
+
+@media (max-width: 768px) {
+  .bookshelf {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .book {
+    height: 180px;
+  }
+
+  .book-title {
+    font-size: 0.8rem;
+    max-width: 160px;
+  }
 }

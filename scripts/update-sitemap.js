@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-function generateSitemap() {
+async function generateSitemap() {
     const baseUrl = 'https://jordanjoecooper.dev';
     const postsDir = path.join(__dirname, '..', 'posts');
     const currentDate = new Date().toISOString().split('T')[0];
-    
+
     // Start XML content
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -40,8 +40,11 @@ function generateSitemap() {
     console.log('Sitemap updated successfully');
 }
 
-try {
-    generateSitemap();
-} catch (error) {
-    console.error('Error generating sitemap:', error);
-} 
+module.exports = {
+    generateSitemap
+};
+
+// If run directly
+if (require.main === module) {
+    generateSitemap().catch(console.error);
+}
