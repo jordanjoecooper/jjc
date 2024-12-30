@@ -1,27 +1,206 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
-const { updateHomepage } = require(path.join(__dirname, 'update-homepage.js'));
-const { generateSitemap } = require(path.join(__dirname, 'update-sitemap.js'));
-const multer = require('multer');
-const sharp = require('sharp');
 
 const app = express();
 const port = 3000;
 
-const SECTIONS = ['Technology', 'Notes', 'musings', 'Work', 'Library', 'Chaos', 'IDK'];
-
-// Configure multer for handling file uploads
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-// Middleware
+// Enable CORS and JSON parsing
 app.use(express.json());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
+// Serve static files from the root directory
 app.use(express.static(path.join(__dirname, '..')));
 
-// Helper function to parse post metadata
+// Get all posts
+app.get('/api/posts', (req, res) => {
+  try {
+    const postsDir = path.join(__dirname, '..', 'posts');
+    const libraryDir = path.join(__dirname, '..', 'library');
+
+    console.log('Current directory:', __dirname);
+    console.log('Posts directory:', postsDir);
+    console.log('Library directory:', libraryDir);
+
+    // Get posts
+    let posts = [];
+    if (fs.existsSync(postsDir)) {
+      const postFiles = fs.readdirSync(postsDir)
+        .filter(file => file.endsWith('.html') && file !== 'index.html');
+      console.log('Found post files:', postFiles);
+
+      posts = postFiles.map(file => {
+        const content = fs.readFileSync(path.join(postsDir, file), 'utf8');
+        const metadata = parsePostMetadata(content);
+        return {
+          id: file.replace('.html', ''),
+          ...metadata,
+          file,
+          type: 'note',
+          path: `/posts/${file}`
+        };
+      });
+    }
+
+    // Get library items
+    let libraryItems = [];
+    console.log('Checking library directory:', libraryDir);
+    if (fs.existsSync(libraryDir)) {
+      console.log('Library directory exists');
+      const libraryFiles = fs.readdirSync(libraryDir)
+        .filter(file => file.endsWith('.html'));
+      console.log('Found library files:', libraryFiles);
+
+      libraryItems = libraryFiles.map(file => {
+        try {
+          const filePath = path.join(libraryDir, file);
+          console.log('Reading library file:', filePath);
+          const content = fs.readFileSync(filePath, 'utf8');
+          console.log('Successfully read library file content');
+          const metadata = parsePostMetadata(content);
+          console.log('Parsed library metadata:', metadata);
+
+          // Extract author from the content if not in metadata
+          let author = metadata.author;
+          if (!author) {
+            const authorMatch = content.match(/<h2[^>]*class="book-author"[^>]*>by\s+([^<]+)<\/h2>/);
+            if (authorMatch) {
+              author = authorMatch[1].trim();
+            }
+          }
+
+          const item = {
+            id: file.replace('.html', ''),
+            title: metadata.title || file.replace('.html', '').replace(/-/g, ' '),
+            date: metadata.date || metadata.created || new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            created: metadata.created || metadata.date,
+            updated: metadata.updated || metadata.date,
+            description: metadata.description || '',
+            section: 'Library',
+            type: 'library',
+            author: author,
+            file,
+            path: `/library/${file}`
+          };
+          console.log('Created library item:', item);
+          return item;
+        } catch (error) {
+          console.error('Error processing library file:', file, error);
+          return null;
+        }
+      }).filter(item => item !== null); // Remove any failed items
+    } else {
+      console.log('Library directory does not exist');
+    }
+
+    console.log('Posts found:', posts.length, posts.map(p => p.title));
+    console.log('Library items found:', libraryItems.length, libraryItems.map(l => l.title));
+
+    // Combine all items
+    const allItems = [...posts, ...libraryItems];
+    console.log('Total items before sort:', allItems.length);
+
+    // Sort by date
+    const sortedItems = allItems.sort((a, b) => {
+      const dateA = new Date(b.date || b.created || '1970-01-01');
+      const dateB = new Date(a.date || a.created || '1970-01-01');
+      return dateA - dateB;
+    });
+
+    console.log('Final items:', sortedItems.map(item => ({
+      id: item.id,
+      type: item.type,
+      title: item.title
+    })));
+
+    res.json(sortedItems);
+  } catch (error) {
+    console.error('Error getting posts and library items:', error);
+    res.status(500).json({ error: 'Failed to get posts and library items', details: error.message });
+  }
+});
+
+// Get single post
+app.get('/api/posts/:id', (req, res) => {
+  try {
+    // Try posts directory first
+    let filePath = path.join(__dirname, '..', 'posts', `${req.params.id}.html`);
+
+    // If not found in posts, try library directory
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(__dirname, '..', 'library', `${req.params.id}.html`);
+    }
+
+    console.log('Reading file:', filePath);
+    const content = fs.readFileSync(filePath, 'utf8');
+    const metadata = parsePostMetadata(content);
+    console.log('Parsed metadata:', metadata);
+
+    // Extract the main content - look for different possible patterns
+    let mainContent = '';
+
+    // Try to find content within main tags first
+    const mainMatch = content.match(/<main[^>]*>([\s\S]*?)<\/main>/);
+    if (mainMatch) {
+      console.log('Found main content within <main> tags');
+      mainContent = mainMatch[1];
+
+      // Remove the back button container if present
+      mainContent = mainContent.replace(/<div class="back-button-container">[\s\S]*?<\/div>/, '');
+
+      // If it's a library item, preserve the book cover container
+      if (metadata.type === 'library') {
+        console.log('Preserving book cover for library item');
+        const bookCoverMatch = mainContent.match(/<div class="book-cover-container">[\s\S]*?<\/div>/);
+        if (bookCoverMatch) {
+          metadata.bookCoverHtml = bookCoverMatch[0];
+        }
+      }
+
+      // Extract just the content div
+      const contentMatch = mainContent.match(/<div[^>]*>([\s\S]*?)<\/div>\s*$/);
+      if (contentMatch) {
+        mainContent = contentMatch[1];
+      }
+    } else {
+      console.log('No main tags found, looking for body content');
+      // Fallback to looking for content in body
+      const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/);
+      if (bodyMatch) {
+        mainContent = bodyMatch[1];
+        // Remove header and back button if present
+        mainContent = mainContent
+          .replace(/<header[^>]*>[\s\S]*?<\/header>/, '')
+          .replace(/<div class="back-button-container">[\s\S]*?<\/div>/, '');
+      }
+    }
+
+    console.log('Extracted content length:', mainContent.length);
+    console.log('Content preview:', mainContent.substring(0, 200) + '...');
+
+    res.json({
+      id: req.params.id,
+      ...metadata,
+      content: mainContent.trim(),
+      type: filePath.includes('/library/') ? 'library' : 'post'
+    });
+  } catch (error) {
+    console.error('Error getting item:', error);
+    res.status(500).json({ error: 'Failed to get item' });
+  }
+});
+
 function parsePostMetadata(content) {
+  console.log('Parsing metadata from content:', content.substring(0, 500) + '...');
+
   // Try to get metadata from HTML comments first
   const metadata = {
     title: content.match(/<!--\s*Title:\s*(.*?)\s*-->/s)?.[1],
@@ -31,13 +210,17 @@ function parsePostMetadata(content) {
     description: content.match(/<!--\s*Description:\s*(.*?)\s*-->/s)?.[1],
     section: content.match(/<!--\s*Section:\s*(.*?)\s*-->/s)?.[1],
     tags: content.match(/<!--\s*Tags:\s*(.*?)\s*-->/s)?.[1],
-    type: content.match(/<!--\s*Type:\s*(.*?)\s*-->/s)?.[1] // Add type for distinguishing books
+    type: content.match(/<!--\s*Type:\s*(.*?)\s*-->/s)?.[1],
+    author: content.match(/<!--\s*Author:\s*(.*?)\s*-->/s)?.[1],
+    bookCover: content.match(/<!--\s*Cover:\s*(.*?)\s*-->/s)?.[1]
   };
+
+  console.log('Extracted metadata from comments:', metadata);
 
   // Fallback to meta tags if needed
   if (!metadata.title) {
     metadata.title = content.match(/<title[^>]*>([^<]+)<\/title>/s)?.[1]?.replace(' - Jordan Joe Cooper', '') ||
-                    content.match(/<h1[^>]*>([^<]+)<\/h1>/s)?.[1];
+                   content.match(/<h1[^>]*>([^<]+)<\/h1>/s)?.[1];
   }
 
   if (!metadata.date) {
@@ -56,362 +239,35 @@ function parsePostMetadata(content) {
     metadata.tags = content.match(/<meta\s+name="keywords"\s+content="([^"]+)"/s)?.[1];
   }
 
+  if (!metadata.author && !metadata.type) {
+    // Check if this is a library item by looking for book-specific elements
+    const hasBookCover = content.includes('book-cover-container');
+    const hasAuthor = content.match(/<h2[^>]*class="book-author"[^>]*>by\s+([^<]+)<\/h2>/s);
+    if (hasBookCover || hasAuthor) {
+      metadata.type = 'library';
+      if (hasAuthor) {
+        metadata.author = hasAuthor[1];
+      }
+    }
+  }
+
   // Set defaults for missing values
   metadata.created = metadata.created || metadata.date;
   metadata.updated = metadata.updated || metadata.date;
   metadata.section = metadata.section || 'Uncategorized';
-  metadata.type = metadata.type || (metadata.section === 'Library' ? 'book' : 'post');
+  metadata.type = metadata.type || (metadata.section === 'Library' ? 'library' : 'post');
 
   // Clean up title if it includes the site name
   if (metadata.title && metadata.title.includes(' - Jordan Joe Cooper')) {
     metadata.title = metadata.title.replace(' - Jordan Joe Cooper', '');
   }
 
+  console.log('Final metadata:', metadata);
   return metadata;
 }
 
-// Get all posts
-app.get('/api/posts', (req, res) => {
-  try {
-    const postsDir = path.join(__dirname, '..', 'posts');
-    console.log('Reading posts from:', postsDir);
-
-    const files = fs.readdirSync(postsDir)
-      .filter(file => file.endsWith('.html') && file !== 'index.html');
-    console.log('Found files:', files);
-
-    const posts = files.map(file => {
-      const content = fs.readFileSync(path.join(postsDir, file), 'utf8');
-      const metadata = parsePostMetadata(content);
-      console.log(`Metadata for ${file}:`, metadata);
-      return {
-        id: file.replace('.html', ''),
-        ...metadata,
-        file
-      };
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    console.log('Sending posts:', posts);
-    res.json(posts);
-  } catch (error) {
-    console.error('Error getting posts:', error);
-    res.status(500).json({ error: 'Failed to get posts', details: error.message });
-  }
-});
-
-// Get single post
-app.get('/api/posts/:id', (req, res) => {
-  try {
-    const filePath = path.join(__dirname, '..', 'posts', `${req.params.id}.html`);
-    const content = fs.readFileSync(filePath, 'utf8');
-    const metadata = parsePostMetadata(content);
-
-    // Extract the main content
-    const mainContent = content.match(/<main>\s*<div>([\s\S]*?)<\/div>\s*<div class="back-button-container">/)?.[1] || '';
-
-    res.json({
-      id: req.params.id,
-      ...metadata,
-      content: mainContent.trim()
-    });
-  } catch (error) {
-    console.error('Error getting post:', error);
-    res.status(500).json({ error: 'Failed to get post' });
-  }
-});
-
-// Helper function to process and save book cover
-async function processBookCover(buffer, filename) {
-  const imagesDir = path.join(__dirname, '..', 'images', 'books');
-  if (!fs.existsSync(imagesDir)) {
-    fs.mkdirSync(imagesDir, { recursive: true });
-  }
-
-  const outputPath = path.join(imagesDir, filename);
-
-  // Process image: resize to 600x800, maintain aspect ratio, optimize
-  await sharp(buffer)
-    .resize(600, 800, {
-      fit: 'cover',
-      position: 'center'
-    })
-    .jpeg({ quality: 85 })
-    .toFile(outputPath);
-
-  return `/images/books/${filename}`;
-}
-
-// Update existing post with file upload support
-app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
-  try {
-    const { title, description, tags, section, content, author } = req.body;
-    const filePath = path.join(__dirname, '..', 'posts', `${req.params.id}.html`);
-
-    // Read existing file to get creation date
-    const existingContent = fs.readFileSync(filePath, 'utf8');
-    const existingMetadata = parsePostMetadata(existingContent);
-    const createdDate = existingMetadata.created || existingMetadata.date;
-
-    let bookCoverPath = existingMetadata.bookCover;
-    if (req.file) {
-      const filename = `${req.params.id}${path.extname(req.file.originalname)}`;
-      bookCoverPath = await processBookCover(req.file.buffer, filename);
-    }
-
-    const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    const updatedContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="${description}">
-  <meta name="keywords" content="${tags}">
-  <meta property="og:title" content="${title} - Jordan Joe Cooper">
-  <meta property="og:type" content="${section === 'Library' ? 'book' : 'website'}">
-  <meta property="og:image" content="${bookCoverPath || '../images/apple-touch-icon.png'}">
-  <meta name="section" content="${section}">
-  <!-- Metadata -->
-  <!-- Title: ${title} -->
-  <!-- Date: ${formattedDate} -->
-  <!-- Created: ${createdDate} -->
-  <!-- Updated: ${formattedDate} -->
-  <!-- Description: ${description} -->
-  <!-- Section: ${section} -->
-  <!-- Tags: ${tags} -->
-  <!-- Type: ${section === 'Library' ? 'book' : 'post'} -->
-  <!-- Author: ${author || ''} -->
-  <!-- BookCover: ${bookCoverPath || ''} -->
-  <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
-  <link rel="manifest" href="../site.webmanifest">
-  <title>${title} - Jordan Joe Cooper</title>
-  <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
-  <header class="post-heading">
-    <h1>${title}</h1>
-    ${section === 'Library' && author ? `<h2 class="book-author">by ${author}</h2>` : ''}
-    <div class="post-time">
-      <time>${formattedDate}</time>
-    </div>
-  </header>
-  <main>
-    ${section === 'Library' && bookCoverPath ? `
-    <div class="book-cover-container">
-      <img src="${bookCoverPath}" alt="Cover of ${title}" class="book-cover-image">
-    </div>
-    ` : ''}
-    <div>
-      ${content}
-    </div>
-    <div class="back-button-container">
-      <a href="https://jordanjoecooper.dev" class="back-button">Back</a>
-    </div>
-  </main>
-</body>
-</html>`;
-
-    fs.writeFileSync(filePath, updatedContent);
-    console.log(`Updated post: ${filePath}`);
-
-    // Update homepage and sitemap
-    await updateHomepage();
-    await generateSitemap();
-
-    res.json({ success: true, message: 'Post updated successfully' });
-  } catch (error) {
-    console.error('Error updating post:', error);
-    res.status(500).json({ error: 'Failed to update post' });
-  }
-});
-
-// Create new post with file upload support
-app.post('/api/create-post', upload.single('bookCover'), async (req, res) => {
-  try {
-    const { title, description, tags, section, content, author } = req.body;
-
-    if (!title || !description || !content) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // If this is a library item, use the library item creation logic
-    if (section === 'Library') {
-      const itemId = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const filePath = path.join(__dirname, '..', 'library', `${itemId}.html`);
-
-      // Process book cover if provided
-      let bookCoverPath = '';
-      if (req.file) {
-        const filename = `${itemId}${path.extname(req.file.originalname)}`;
-        bookCoverPath = await processBookCover(req.file.buffer, filename);
-        // Convert absolute path to relative for library items
-        bookCoverPath = '..' + bookCoverPath;
-      }
-
-      const date = new Date();
-      const formattedDate = date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-
-      // Create library directory if it doesn't exist
-      const libraryDir = path.join(__dirname, '..', 'library');
-      if (!fs.existsSync(libraryDir)) {
-        fs.mkdirSync(libraryDir, { recursive: true });
-      }
-
-      const template = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="${description}">
-  <meta name="keywords" content="${tags}">
-  <meta property="og:title" content="${title} - Jordan Joe Cooper">
-  <meta property="og:type" content="book">
-  <meta property="og:image" content="${bookCoverPath || '../images/apple-touch-icon.png'}">
-  <!-- Book Metadata -->
-  <!-- Title: ${title} -->
-  <!-- Author: ${author} -->
-  <!-- Cover: ${bookCoverPath} -->
-  <!-- Date: ${formattedDate} -->
-  <!-- Created: ${formattedDate} -->
-  <!-- Updated: ${formattedDate} -->
-  <!-- Description: ${description} -->
-  <!-- Tags: ${tags} -->
-  <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
-  <link rel="manifest" href="../site.webmanifest">
-  <title>${title} - Jordan Joe Cooper</title>
-  <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
-  <header class="post-heading">
-    <h1>${title}</h1>
-    <div class="post-time">
-      <time>${formattedDate}</time> by <a href="https://jordanjoecooper.dev">Jordan Joe Cooper</a>
-      <div class="post-metadata">
-        Last updated: <time>${formattedDate}</time>
-      </div>
-    </div>
-  </header>
-  <main>
-    <div class="book-cover-container">
-      <img src="${bookCoverPath}" alt="Cover of ${title}" class="book-cover-image">
-      <h2 class="book-author">by ${author}</h2>
-    </div>
-    <div class="book-content">
-      ${content}
-    </div>
-    <div class="back-button-container">
-      <a href="https://jordanjoecooper.dev" class="back-button">Back</a>
-    </div>
-  </main>
-</body>
-</html>`;
-
-      fs.writeFileSync(filePath, template);
-      console.log(`Created library item: ${filePath}`);
-
-      // Update homepage and sitemap
-      try {
-        await updateHomepage();
-        await generateSitemap();
-        console.log('Homepage and sitemap updated successfully');
-      } catch (error) {
-        console.error('Error updating homepage/sitemap:', error);
-      }
-
-      return res.json({
-        success: true,
-        message: 'Library item created successfully'
-      });
-    }
-
-    // For non-library posts, use the existing new-post script
-    const env = {
-      ...process.env,
-      POST_TITLE: title,
-      POST_DESCRIPTION: description,
-      POST_TAGS: tags || '',
-      POST_SECTION: section || 'Technology',
-      POST_CONTENT: content,
-      POST_AUTHOR: author || ''
-    };
-
-    // Run new-post script
-    const scriptPath = path.join(__dirname, 'new-post.js');
-    const child = exec(`node ${scriptPath}`, { env });
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', (data) => {
-      stdout += data;
-      console.log(data);
-    });
-
-    child.stderr.on('data', (data) => {
-      stderr += data;
-      console.error(data);
-    });
-
-    child.on('close', async (code) => {
-      if (code === 0) {
-        try {
-          // Update homepage and sitemap
-          await updateHomepage();
-          await generateSitemap();
-
-          res.json({
-            success: true,
-            message: 'Post created successfully',
-            details: stdout
-          });
-        } catch (error) {
-          console.error('Error updating homepage/sitemap:', error);
-          res.status(500).json({
-            error: 'Post created but failed to update homepage/sitemap',
-            details: error.message
-          });
-        }
-      } else {
-        res.status(500).json({
-          error: 'Failed to create post',
-          details: stderr
-        });
-      }
-    });
-  } catch (error) {
-    console.error('Error creating post:', error);
-    res.status(500).json({
-      error: 'Failed to create post',
-      details: error.message
-    });
-  }
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Something broke!',
-    details: err.message
-  });
-});
-
-// Start server
+// Start the server
 app.listen(port, () => {
   console.log(`Editor server running at http://localhost:${port}`);
-  console.log(`Visit http://localhost:${port}/editor.html to create new posts`);
+  console.log(`Visit http://localhost:${port}/editor/editor.html to create new posts`);
 });

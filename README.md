@@ -15,7 +15,7 @@ npm install
 # Content Management Scripts
 The site includes three main scripts for content management:
 
-## 1. Creating New Posts (`new-post.js`)
+## 1. Creating New Posts (`editor/new-post.js`)
 Creates new blog posts with all necessary metadata and updates site content:
 ```bash
 npm run new-post
