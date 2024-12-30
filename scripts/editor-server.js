@@ -195,6 +195,7 @@ app.get('/api/posts', (req, res) => {
         return {
           id: file.replace('.html', ''),
           ...metadata,
+          date: metadata.created,
           file,
           type: 'note',
           path: `/posts/${file}`
@@ -232,12 +233,8 @@ app.get('/api/posts', (req, res) => {
           const item = {
             id: file.replace('.html', ''),
             title: metadata.title || file.replace('.html', '').replace(/-/g, ' '),
-            date: metadata.date || metadata.created || new Date().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }),
-            created: metadata.created || metadata.date,
+            date: metadata.created,
+            created: metadata.created,
             updated: metadata.updated || metadata.date,
             description: metadata.description || '',
             section: 'Library',
@@ -528,7 +525,6 @@ function parsePostMetadata(content) {
   // Extract metadata from HTML comments
   const metadata = {
     title: content.match(/<!--\s*Title:\s*(.*?)\s*-->/s)?.[1],
-    date: content.match(/<!--\s*Created:\s*(.*?)\s*-->/s)?.[1] || content.match(/<!--\s*Date:\s*(.*?)\s*-->/s)?.[1],
     created: content.match(/<!--\s*Created:\s*(.*?)\s*-->/s)?.[1],
     updated: content.match(/<!--\s*Updated:\s*(.*?)\s*-->/s)?.[1],
     description: content.match(/<!--\s*Description:\s*(.*?)\s*-->/s)?.[1],
@@ -541,11 +537,13 @@ function parsePostMetadata(content) {
   console.log('Extracted metadata from comments:', metadata);
 
   // Set default values
-  metadata.date = metadata.date || metadata.created || new Date().toLocaleDateString('en-US', {
+  const now = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
+  metadata.created = metadata.created || now;
+  metadata.updated = metadata.updated || metadata.created || now;
   metadata.section = metadata.section || 'Uncategorized';
   metadata.type = metadata.type || 'post';
 
