@@ -6,7 +6,8 @@
   "scripts": {
     "new-post": "node scripts/new-post.js",
     "update-homepage": "node scripts/update_homepage.js",
-    "update-sitemap": "node scripts/update_sitemap.js"
+    "update-sitemap": "node scripts/update_sitemap.js",
+    "fix-paths": "node scripts/fix-paths.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12"
