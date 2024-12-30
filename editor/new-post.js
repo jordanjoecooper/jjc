@@ -9,7 +9,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const SECTIONS = ['Technology', 'Notes', 'musings', 'Work', 'Library', 'Chaos', 'IDK'];
+const SECTIONS = ['Notes', 'Library', 'IDK'];
 
 function slugify(text) {
   return text

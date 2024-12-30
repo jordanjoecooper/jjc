@@ -1,15 +1,170 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const multer = require('multer');
 
 const app = express();
 const port = 3000;
+
+// Add multer for handling multipart/form-data
+const upload = multer();
+
+// Post templates
+const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
+<!-- Description: ${metadata.description} -->
+<!-- Section: ${metadata.section || 'Notes'} -->
+<!-- Tags: ${metadata.tags} -->
+<!-- Updated: ${metadata.updated} -->
+<!-- Created: ${metadata.created} -->
+<!-- Type: ${metadata.type || 'note'} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="${metadata.description}">
+  <meta name="keywords" content="${metadata.tags}">
+  <meta property="og:title" content="${metadata.title} - Jordan Joe Cooper">
+  <meta property="og:type" content="article">
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <title>${metadata.title} - Jordan Joe Cooper</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/" class="logo">J</a>
+      <div class="nav-links">
+        <a href="/#about">About</a>
+      </div>
+    </nav>
+
+    <header class="post-heading">
+      <h1>${metadata.title}</h1>
+      <p class="post-description">${metadata.description}</p>
+      <div class="post-metadata-header">
+        <span>${metadata.section || 'NOTES'}</span>
+        <span>•</span>
+        <time>${metadata.created}</time>
+      </div>
+    </header>
+
+    <main>
+      <div class="post-content">
+        ${metadata.content || ''}
+      </div>
+
+      <footer class="post-footer">
+        <div class="post-tags">
+          ${metadata.tags.split(',').map(tag =>
+            `<span class="post-tag">${tag.trim()}</span>`
+          ).join('\n          ')}
+        </div>
+        <div class="post-time">
+          Last updated: <time>${metadata.updated}</time>
+        </div>
+      </footer>
+
+      <div class="back-button-container">
+        <a href="/" class="back-button">Back to home</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>`;
+
+const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
+<!-- Description: ${metadata.description} -->
+<!-- Section: Library -->
+<!-- Tags: ${metadata.tags} -->
+<!-- Updated: ${metadata.updated} -->
+<!-- Created: ${metadata.created} -->
+<!-- Type: library -->
+<!-- Author: ${metadata.author} -->
+<!-- Cover: ${metadata.bookCover} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="${metadata.description}">
+  <meta name="keywords" content="${metadata.tags}">
+  <meta property="og:title" content="${metadata.title} - Jordan Joe Cooper">
+  <meta property="og:type" content="book">
+  <meta property="og:image" content="${metadata.bookCover}">
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <title>${metadata.title} - Jordan Joe Cooper</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/" class="logo">J</a>
+      <div class="nav-links">
+        <a href="/#about">About</a>
+      </div>
+    </nav>
+
+    <header class="post-heading">
+      <h1>${metadata.title}</h1>
+      <p class="post-description">${metadata.description}</p>
+      <div class="post-metadata-header">
+        <span>Library</span>
+        <span>•</span>
+        <span>Jordan Joe Cooper</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="book-cover-container">
+        <img src="${metadata.bookCover}" alt="Cover of ${metadata.title}" class="book-cover-image">
+        <h2 class="book-author">by ${metadata.author}</h2>
+      </div>
+
+      <div class="book-content">
+        ${metadata.content || ''}
+      </div>
+
+      <footer class="post-footer">
+        <div class="post-tags">
+          ${metadata.tags.split(',').map(tag =>
+            `<span class="post-tag">${tag.trim()}</span>`
+          ).join('\n          ')}
+        </div>
+        <div class="post-time">
+          Last updated: <time>${metadata.updated}</time>
+        </div>
+      </footer>
+
+      <div class="back-button-container">
+        <a href="/" class="back-button">Back to home</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>`;
 
 // Enable CORS and JSON parsing
 app.use(express.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
 
@@ -156,19 +311,25 @@ app.get('/api/posts/:id', (req, res) => {
       // Remove the back button container if present
       mainContent = mainContent.replace(/<div class="back-button-container">[\s\S]*?<\/div>/, '');
 
-      // If it's a library item, preserve the book cover container
-      if (metadata.type === 'library') {
-        console.log('Preserving book cover for library item');
+      // If it's a library item, preserve both the book cover and content
+      if (filePath.includes('/library/')) {
+        console.log('Processing library item content');
         const bookCoverMatch = mainContent.match(/<div class="book-cover-container">[\s\S]*?<\/div>/);
+        const bookContentMatch = mainContent.match(/<div class="book-content">([\s\S]*?)<\/div>/);
+
         if (bookCoverMatch) {
           metadata.bookCoverHtml = bookCoverMatch[0];
         }
-      }
-
-      // Extract just the content div
-      const contentMatch = mainContent.match(/<div[^>]*>([\s\S]*?)<\/div>\s*$/);
-      if (contentMatch) {
-        mainContent = contentMatch[1];
+        if (bookContentMatch) {
+          metadata.content = bookContentMatch[1];
+          mainContent = bookContentMatch[1];
+        }
+      } else {
+        // For regular posts, just get the content div
+        const contentMatch = mainContent.match(/<div class="post-content">([\s\S]*?)<\/div>/);
+        if (contentMatch) {
+          mainContent = contentMatch[1];
+        }
       }
     } else {
       console.log('No main tags found, looking for body content');
@@ -186,25 +347,148 @@ app.get('/api/posts/:id', (req, res) => {
     console.log('Extracted content length:', mainContent.length);
     console.log('Content preview:', mainContent.substring(0, 200) + '...');
 
-    res.json({
+    // For library items, include both the book cover HTML and content
+    const response = {
       id: req.params.id,
       ...metadata,
       content: mainContent.trim(),
       type: filePath.includes('/library/') ? 'library' : 'post'
-    });
+    };
+
+    if (filePath.includes('/library/')) {
+      response.bookCoverHtml = metadata.bookCoverHtml;
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Error getting item:', error);
     res.status(500).json({ error: 'Failed to get item' });
   }
 });
 
+// Create a new post
+app.post('/api/posts', upload.none(), (req, res) => {
+  try {
+    const { title, content, description, tags, section, author, bookCover } = req.body;
+    const isLibrary = section === 'Library';
+
+    // Generate metadata
+    const now = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const metadata = {
+      title,
+      description,
+      section,
+      tags: tags || '',
+      created: now,
+      updated: now,
+      content: content || '',
+      type: isLibrary ? 'library' : 'note'
+    };
+
+    // Add library-specific fields
+    if (isLibrary) {
+      metadata.author = author;
+      metadata.bookCover = bookCover;
+    }
+
+    // Generate filename from title
+    const filename = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') + '.html';
+
+    // Determine target directory
+    const targetDir = path.join(__dirname, '..', isLibrary ? 'library' : 'posts');
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    // Generate HTML content using template
+    const template = isLibrary ? libraryTemplate : postTemplate;
+    const htmlContent = template(metadata);
+
+    // Write file
+    fs.writeFileSync(path.join(targetDir, filename), htmlContent);
+
+    res.json({
+      success: true,
+      message: 'Post created successfully',
+      filename
+    });
+  } catch (error) {
+    console.error('Error creating post:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating post',
+      error: error.message
+    });
+  }
+});
+
+// Update an existing post
+app.put('/api/posts/:id', upload.none(), (req, res) => {
+  try {
+    const { title, content, description, tags, section, type, author, bookCover } = req.body;
+    const fileName = `${req.params.id}.html`;
+
+    // Determine the file path based on section
+    const postsDir = path.join(__dirname, '..', 'posts');
+    const libraryDir = path.join(__dirname, '..', 'library');
+    const isLibrary = section === 'Library';
+    const targetDir = isLibrary ? libraryDir : postsDir;
+
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    // Generate metadata
+    const now = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const metadata = {
+      title,
+      description,
+      section,
+      tags: tags || '',
+      updated: now,
+      content,
+      type: isLibrary ? 'library' : 'note'
+    };
+
+    // Add library-specific fields
+    if (isLibrary) {
+      metadata.author = author;
+      metadata.bookCover = bookCover;
+    }
+
+    // Use the appropriate template
+    const template = isLibrary ? libraryTemplate : postTemplate;
+    const filePath = path.join(targetDir, fileName);
+    fs.writeFileSync(filePath, template(metadata));
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(500).json({ error: 'Failed to update post' });
+  }
+});
+
 function parsePostMetadata(content) {
   console.log('Parsing metadata from content:', content.substring(0, 500) + '...');
 
-  // Try to get metadata from HTML comments first
+  // Extract metadata from HTML comments
   const metadata = {
     title: content.match(/<!--\s*Title:\s*(.*?)\s*-->/s)?.[1],
-    date: content.match(/<!--\s*Date:\s*(.*?)\s*-->/s)?.[1],
+    date: content.match(/<!--\s*Created:\s*(.*?)\s*-->/s)?.[1] || content.match(/<!--\s*Date:\s*(.*?)\s*-->/s)?.[1],
     created: content.match(/<!--\s*Created:\s*(.*?)\s*-->/s)?.[1],
     updated: content.match(/<!--\s*Updated:\s*(.*?)\s*-->/s)?.[1],
     description: content.match(/<!--\s*Description:\s*(.*?)\s*-->/s)?.[1],
@@ -214,53 +498,16 @@ function parsePostMetadata(content) {
     author: content.match(/<!--\s*Author:\s*(.*?)\s*-->/s)?.[1],
     bookCover: content.match(/<!--\s*Cover:\s*(.*?)\s*-->/s)?.[1]
   };
-
   console.log('Extracted metadata from comments:', metadata);
 
-  // Fallback to meta tags if needed
-  if (!metadata.title) {
-    metadata.title = content.match(/<title[^>]*>([^<]+)<\/title>/s)?.[1]?.replace(' - Jordan Joe Cooper', '') ||
-                   content.match(/<h1[^>]*>([^<]+)<\/h1>/s)?.[1];
-  }
-
-  if (!metadata.date) {
-    metadata.date = content.match(/<time[^>]*>([^<]+)<\/time>/s)?.[1];
-  }
-
-  if (!metadata.description) {
-    metadata.description = content.match(/<meta\s+name="description"\s+content="([^"]+)"/s)?.[1];
-  }
-
-  if (!metadata.section) {
-    metadata.section = content.match(/<meta\s+name="section"\s+content="([^"]+)"/s)?.[1];
-  }
-
-  if (!metadata.tags) {
-    metadata.tags = content.match(/<meta\s+name="keywords"\s+content="([^"]+)"/s)?.[1];
-  }
-
-  if (!metadata.author && !metadata.type) {
-    // Check if this is a library item by looking for book-specific elements
-    const hasBookCover = content.includes('book-cover-container');
-    const hasAuthor = content.match(/<h2[^>]*class="book-author"[^>]*>by\s+([^<]+)<\/h2>/s);
-    if (hasBookCover || hasAuthor) {
-      metadata.type = 'library';
-      if (hasAuthor) {
-        metadata.author = hasAuthor[1];
-      }
-    }
-  }
-
-  // Set defaults for missing values
-  metadata.created = metadata.created || metadata.date;
-  metadata.updated = metadata.updated || metadata.date;
+  // Set default values
+  metadata.date = metadata.date || metadata.created || new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
   metadata.section = metadata.section || 'Uncategorized';
-  metadata.type = metadata.type || (metadata.section === 'Library' ? 'library' : 'post');
-
-  // Clean up title if it includes the site name
-  if (metadata.title && metadata.title.includes(' - Jordan Joe Cooper')) {
-    metadata.title = metadata.title.replace(' - Jordan Joe Cooper', '');
-  }
+  metadata.type = metadata.type || 'post';
 
   console.log('Final metadata:', metadata);
   return metadata;

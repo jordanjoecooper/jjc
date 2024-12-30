@@ -154,6 +154,34 @@
     .save-button:hover {
       background: var(--accent-hover);
     }
+
+    .post-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .post-list-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .post-type-filter {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: var(--body-font);
+      font-size: 0.875rem;
+      color: var(--text-color);
+      background-color: white;
+    }
+
+    .post-type-filter:hover {
+      border-color: var(--accent-color);
+    }
   </style>
 </head>
 <body>
@@ -165,7 +193,14 @@
     <main class="editor-main">
       <div class="post-list">
         <div class="post-list-header">
-          <h2 class="post-list-title">Recent Posts</h2>
+          <div class="post-list-header-left">
+            <h2 class="post-list-title">Recent Posts</h2>
+            <select id="postTypeFilter" onchange="filterPosts()" class="post-type-filter">
+              <option value="all">All</option>
+              <option value="note">Notes</option>
+              <option value="library">Library</option>
+            </select>
+          </div>
           <button class="new-post-button" onclick="clearEditor()">New Post</button>
         </div>
         <div class="post-list-items" id="postList"></div>
@@ -231,6 +266,7 @@
   <script>
     let currentPostId = null;
     let posts = [];
+    let allPosts = []; // Store all posts for filtering
 
     // Load posts when the page loads
     window.addEventListener('load', loadPosts);
@@ -250,7 +286,8 @@
         console.log('Received items:', data);
         console.log('Library items:', data.filter(item => item.type === 'library'));
         console.log('Posts:', data.filter(item => item.type === 'post'));
-        posts = data;
+        allPosts = data; // Store all posts
+        posts = [...allPosts]; // Create a copy for filtering
         renderPostList();
       } catch (error) {
         console.error('Error loading posts:', error);
@@ -322,6 +359,13 @@
           console.log('Setting up library item fields');
           document.getElementById('author').value = post.author || '';
           document.getElementById('section').value = 'Library';
+          if (post.bookCoverHtml) {
+            const bookCoverMatch = post.bookCoverHtml.match(/src="([^"]+)"/);
+            if (bookCoverMatch) {
+              document.getElementById('bookCoverPreview').src = bookCoverMatch[1];
+              document.getElementById('bookCoverPreview').style.display = 'block';
+            }
+          }
           toggleBookFields();
         }
 
@@ -353,6 +397,71 @@
       const bookFields = document.getElementById('libraryFields');
       bookFields.style.display = section === 'Library' ? 'block' : 'none';
     }
+
+    function filterPosts() {
+      const filter = document.getElementById('postTypeFilter').value;
+      posts = filter === 'all'
+        ? [...allPosts] // Create a new copy of all posts
+        : allPosts.filter(item => item.type === filter);
+      renderPostList();
+    }
+
+    async function fetchPosts() {
+      await loadPosts();
+    }
+
+    // Add form submit handler
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const editor = document.getElementById('editor');
+      const section = document.getElementById('section').value;
+
+      try {
+        const formData = new FormData();
+        formData.append('title', form.title.value);
+        formData.append('description', form.description.value);
+        formData.append('content', editor.innerHTML);
+        formData.append('section', section);
+        formData.append('tags', form.tags.value);
+
+        if (section === 'Library') {
+          formData.append('author', form.author.value);
+          if (form.bookCover.files[0]) {
+            formData.append('bookCover', form.bookCover.files[0]);
+          }
+        }
+
+        const endpoint = currentPostId
+          ? `/api/posts/${currentPostId}`
+          : '/api/posts';
+
+        const response = await fetch(endpoint, {
+          method: currentPostId ? 'PUT' : 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Save result:', result);
+
+        // Clear the form and refresh the post list
+        form.reset();
+        editor.innerHTML = '';
+        currentPostId = null;
+        form.classList.remove('active');
+        form.style.display = 'none';
+
+        // Refresh the post list
+        await loadPosts();
+      } catch (error) {
+        console.error('Error saving post:', error);
+        alert('Error saving post: ' + error.message);
+      }
+    });
 
     // ... rest of your existing script code ...
   </script>

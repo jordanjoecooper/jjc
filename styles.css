@@ -348,3 +348,159 @@ nav {
     gap: 1rem;
   }
 }
+
+/* Post and Library Entry Layouts */
+.post-heading {
+  margin: 4rem 0 2rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.post-heading h1 {
+  font-family: var(--primary-font);
+  font-size: 3.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.post-description {
+  font-size: 1.5rem;
+  color: var(--secondary-text-color);
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  font-family: var(--body-font);
+}
+
+.post-metadata-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  font-family: var(--body-font);
+  font-size: 0.9rem;
+  color: var(--secondary-text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.post-metadata-header a {
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+.post-metadata-header a:hover {
+  color: var(--accent-color);
+}
+
+.post-content, .book-content {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: var(--text-color);
+}
+
+.post-content p, .book-content p {
+  margin: 1.5rem 0;
+}
+
+/* Book specific styles */
+.book-cover-container {
+  text-align: center;
+  margin: 3rem 0;
+}
+
+.book-cover-image {
+  max-width: 300px;
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+}
+
+.book-author {
+  font-family: var(--primary-font);
+  font-size: 1.4rem;
+  color: var(--secondary-text-color);
+  margin-top: 1rem;
+}
+
+/* Post footer */
+.post-footer {
+  max-width: 720px;
+  margin: 4rem auto;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.post-tags {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.post-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  margin: 0.25rem;
+  background-color: #F3F4F6;
+  border-radius: 9999px;
+  color: var(--secondary-text-color);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: default;
+}
+
+.post-time {
+  font-size: 0.9rem;
+  color: var(--secondary-text-color);
+}
+
+/* Back navigation */
+.back-button-container {
+  max-width: 720px;
+  margin: 4rem auto;
+  text-align: left;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--body-font);
+  font-size: 1rem;
+  color: var(--text-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.back-button:hover {
+  color: var(--accent-color);
+}
+
+.back-button::before {
+  content: "←";
+  font-size: 1.2rem;
+}
+
+/* Quote styling for aphorisms */
+.post-content blockquote {
+  margin: 2rem 0;
+  padding-left: 1.5rem;
+  border-left: 4px solid var(--border-color);
+  font-style: italic;
+  color: var(--secondary-text-color);
+}
+
+.post-content blockquote p {
+  margin: 0.5rem 0;
+}
+
+.post-content blockquote cite {
+  display: block;
+  margin-top: 0.5rem;
+  font-style: normal;
+  font-size: 0.9em;
+  color: var(--text-color);
+}
