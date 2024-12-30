@@ -39,9 +39,9 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
 <body>
   <div class="container">
     <nav>
-      <a href="/" class="logo">J</a>
+      <a href="../" class="logo">J</a>
       <div class="nav-links">
-        <a href="/about.html">About</a>
+        <a href="../about.html">About</a>
       </div>
     </nav>
 
@@ -50,6 +50,8 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       <p class="post-description">${metadata.description}</p>
       <div class="post-metadata-header">
         <span>${metadata.section || 'NOTES'}</span>
+        <span>•</span>
+        <span>Jordan Joe Cooper</span>
         <span>•</span>
         <time>${metadata.created}</time>
       </div>
@@ -72,7 +74,7 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       </footer>
 
       <div class="back-button-container">
-        <a href="/" class="back-button">Back to home</a>
+        <a href="../" class="back-button">Back to home</a>
       </div>
     </main>
   </div>
@@ -108,7 +110,7 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
 <body>
   <div class="container">
     <nav>
-      <a href="/" class="logo">J</a>
+      <a href="../" class="logo">J</a>
       <div class="nav-links">
         <a href="../about.html">About</a>
       </div>
@@ -120,7 +122,7 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       <div class="post-metadata-header">
         <span>Library</span>
         <span>•</span>
-        <span>${metadata.author}</span>
+        <span>Jordan Joe Cooper</span>
         <span>•</span>
         <time>${metadata.created}</time>
       </div>
@@ -148,7 +150,7 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       </footer>
 
       <div class="back-button-container">
-        <a href="/" class="back-button">Back to home</a>
+        <a href="../" class="back-button">Back to home</a>
       </div>
     </main>
   </div>
@@ -368,8 +370,7 @@ app.get('/api/posts/:id', (req, res) => {
 // Create a new post
 app.post('/api/posts', upload.none(), (req, res) => {
   try {
-    const { title, content, description, tags, section, author, bookCover } = req.body;
-    const isLibrary = section === 'Library';
+    const { title, content, description, tags, section } = req.body;
 
     // Generate metadata
     const now = new Date().toLocaleDateString('en-US', {
@@ -381,19 +382,13 @@ app.post('/api/posts', upload.none(), (req, res) => {
     const metadata = {
       title,
       description,
-      section,
+      section: section || 'Notes',
       tags: tags || '',
       created: now,
       updated: now,
       content: content || '',
-      type: isLibrary ? 'library' : 'note'
+      type: 'note'
     };
-
-    // Add library-specific fields
-    if (isLibrary) {
-      metadata.author = author;
-      metadata.bookCover = bookCover;
-    }
 
     // Generate filename from title
     const filename = title
@@ -401,15 +396,14 @@ app.post('/api/posts', upload.none(), (req, res) => {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '') + '.html';
 
-    // Determine target directory
-    const targetDir = path.join(__dirname, '..', isLibrary ? 'library' : 'posts');
+    // Always save new posts to the posts directory
+    const targetDir = path.join(__dirname, '..', 'posts');
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
     // Generate HTML content using template
-    const template = isLibrary ? libraryTemplate : postTemplate;
-    const htmlContent = template(metadata);
+    const htmlContent = postTemplate(metadata);
 
     // Write file
     fs.writeFileSync(path.join(targetDir, filename), htmlContent);
@@ -433,27 +427,56 @@ app.post('/api/posts', upload.none(), (req, res) => {
 app.put('/api/posts/:id', upload.none(), (req, res) => {
   try {
     const { title, content, description, tags, section, type, author, bookCover } = req.body;
-    const fileName = `${req.params.id}.html`;
+    // Ensure the fileName has .html extension
+    const fileName = req.params.id.endsWith('.html') ? req.params.id : `${req.params.id}.html`;
 
-    // First check if the file exists in either directory
+    // First check where the file currently exists
     const postsPath = path.join(__dirname, '..', 'posts', fileName);
     const libraryPath = path.join(__dirname, '..', 'library', fileName);
+    const libraryDir = path.join(__dirname, '..', 'library');
 
-    let existingPath;
-    let isLibrary;
+    let filePath;
+    let isLibrary = section === 'Library';
+
+    // Log the paths we're checking
+    console.log('Checking paths:', {
+      postsPath,
+      libraryPath,
+      exists: {
+        posts: fs.existsSync(postsPath),
+        library: fs.existsSync(libraryPath)
+      }
+    });
 
     if (fs.existsSync(postsPath)) {
-      existingPath = postsPath;
-      isLibrary = false;
+      filePath = postsPath;
+      // If file exists in posts but section is Library, we'll move it
+      if (isLibrary) {
+        // Ensure library directory exists before moving
+        if (!fs.existsSync(libraryDir)) {
+          fs.mkdirSync(libraryDir, { recursive: true });
+        }
+        fs.renameSync(postsPath, libraryPath);
+        filePath = libraryPath;
+      }
     } else if (fs.existsSync(libraryPath)) {
-      existingPath = libraryPath;
-      isLibrary = true;
+      filePath = libraryPath;
+      // If file exists in library but section is not Library, we'll move it
+      if (!isLibrary) {
+        fs.renameSync(libraryPath, postsPath);
+        filePath = postsPath;
+      }
     } else {
-      return res.status(404).json({ error: 'File not found' });
+      console.error('File not found in either location:', { postsPath, libraryPath });
+      return res.status(404).json({
+        error: 'File not found in either posts or library directory',
+        details: { postsPath, libraryPath }
+      });
     }
 
     // Read the existing file to get its metadata
-    const originalContent = fs.readFileSync(existingPath, 'utf8');
+    console.log('Reading file from:', filePath);
+    const originalContent = fs.readFileSync(filePath, 'utf8');
     const originalMetadata = parsePostMetadata(originalContent);
 
     // Generate metadata
@@ -470,24 +493,32 @@ app.put('/api/posts/:id', upload.none(), (req, res) => {
       tags: tags || '',
       created: originalMetadata.created || now,
       updated: now,
-      content,
-      type: isLibrary ? 'library' : 'note'
+      type: isLibrary ? 'library' : 'note',
+      id: req.params.id
     };
 
-    // Add library-specific fields if it's a library item
+    // For library items, we need to handle the content differently
     if (isLibrary) {
       metadata.author = author || originalMetadata.author;
       metadata.bookCover = bookCover || originalMetadata.bookCover;
+      // Remove any existing book cover container from the content
+      metadata.content = content.replace(/<div class="book-cover-container">[\s\S]*?<\/div>/, '').trim();
+    } else {
+      metadata.content = content;
     }
 
     // Use the appropriate template
     const template = isLibrary ? libraryTemplate : postTemplate;
-    fs.writeFileSync(existingPath, template(metadata));
+    fs.writeFileSync(filePath, template(metadata));
 
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating post:', error);
-    res.status(500).json({ error: 'Failed to update post' });
+    res.status(500).json({
+      error: 'Failed to update post',
+      details: error.message,
+      stack: error.stack
+    });
   }
 });
 
