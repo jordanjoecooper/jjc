@@ -170,7 +170,10 @@ function libraryTemplate(metadata) {
 
 // Enable CORS and JSON parsing
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
+  console.log('Request headers:', req.headers);
+  console.log('Request body type:', typeof req.body);
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -492,7 +495,7 @@ app.post('/api/posts', upload.single('bookCover'), async (req, res) => {
     // Update homepage
     try {
       console.log('Updating homepage...');
-      require('./update-homepage.js');
+      await require('./update-homepage.js').updateHomepage();
       console.log('Homepage updated successfully');
     } catch (error) {
       console.error('Error updating homepage:', error);
@@ -518,6 +521,15 @@ app.post('/api/posts', upload.single('bookCover'), async (req, res) => {
 app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
   try {
     const { title, content, description, tags, section, author, year } = req.body;
+    console.log('Received PUT request with content:', {
+      title,
+      content: content ? content.substring(0, 100) + '...' : 'no content',
+      contentType: typeof content,
+      contentLength: content ? content.length : 0,
+      description,
+      section
+    });
+
     // Ensure the fileName has .html extension
     const fileName = req.params.id.endsWith('.html') ? req.params.id : `${req.params.id}.html`;
 
@@ -569,6 +581,10 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
     console.log('Reading file from:', filePath);
     const originalContent = fs.readFileSync(filePath, 'utf8');
     const originalMetadata = parsePostMetadata(originalContent);
+    console.log('Original metadata:', {
+      title: originalMetadata.title,
+      contentLength: originalMetadata.content ? originalMetadata.content.length : 0
+    });
 
     // Generate metadata
     const now = new Date().toLocaleDateString('en-US', {
@@ -578,18 +594,24 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
     });
 
     const metadata = {
-      title,
-      description,
+      title: title || originalMetadata.title,
+      description: description || originalMetadata.description,
       section: isLibrary ? 'Library' : (section || 'Notes'),
-      tags: tags || '',
+      tags: tags || originalMetadata.tags || '',
       created: originalMetadata.created || now,
       updated: now,
-      content: content || '',
+      content: content || originalMetadata.content || '',
       type: isLibrary ? 'book' : 'note',
       id: req.params.id,
-      author: isLibrary ? author : undefined,
-      year: isLibrary ? year : undefined
+      author: isLibrary ? (author || originalMetadata.author) : undefined,
+      year: isLibrary ? (year || originalMetadata.year) : undefined
     };
+
+    console.log('New metadata before template:', {
+      title: metadata.title,
+      contentLength: metadata.content ? metadata.content.length : 0,
+      content: metadata.content ? metadata.content.substring(0, 100) + '...' : 'no content'
+    });
 
     // If it's a library item and has a new book cover, process the image
     if (isLibrary && req.file) {
@@ -613,13 +635,20 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
 
     // Use the appropriate template
     const template = isLibrary ? libraryTemplate : postTemplate;
+    console.log('Generating template with metadata:', {
+      title: metadata.title,
+      contentLength: metadata.content ? metadata.content.length : 0,
+      type: metadata.type
+    });
     const newContent = template(metadata);
+    console.log('Generated content length:', newContent.length);
     fs.writeFileSync(filePath, newContent);
+    console.log('Wrote file to:', filePath);
 
     // Update homepage
     try {
       console.log('Updating homepage...');
-      require('./update-homepage.js').updateHomepage();
+      await require('./update-homepage.js').updateHomepage();
       console.log('Homepage updated successfully');
     } catch (error) {
       console.error('Error updating homepage:', error);
@@ -638,7 +667,7 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
 });
 
 function parsePostMetadata(content) {
-  console.log('Parsing metadata from content:', content.substring(0, 500) + '...');
+  console.log('Parsing metadata from content length:', content ? content.length : 0);
 
   // Extract metadata from HTML comments
   const metadata = {
@@ -652,56 +681,28 @@ function parsePostMetadata(content) {
     author: content.match(/<!--\s*Author:\s*(.*?)\s*-->/s)?.[1],
     year: content.match(/<!--\s*Year:\s*(.*?)\s*-->/s)?.[1]
   };
-  console.log('Extracted metadata from comments:', metadata);
 
   // Extract content based on type
   if (content.includes('class="book-content"')) {
     // For library items, get content from book-content div
-    const startTag = '<div class="book-content">';
-    const endTag = '</div>';
-    const startIndex = content.indexOf(startTag);
-    if (startIndex !== -1) {
-      let depth = 1;
-      let currentIndex = startIndex + startTag.length;
-      while (depth > 0 && currentIndex < content.length) {
-        const nextClose = content.indexOf(endTag, currentIndex);
-        const nextOpen = content.indexOf('<div', currentIndex);
-
-        if (nextClose === -1) break;
-
-        if (nextOpen === -1 || nextClose < nextOpen) {
-          depth--;
-          currentIndex = nextClose + endTag.length;
-        } else {
-          depth++;
-          currentIndex = nextOpen + 4;
-        }
-      }
-      if (depth === 0) {
-        metadata.content = content.substring(startIndex + startTag.length, currentIndex - endTag.length).trim();
-      }
+    const match = content.match(/<div class="book-content">([\s\S]*?)<\/div>\s*<footer/);
+    if (match) {
+      metadata.content = match[1].trim();
     }
   } else {
-    // For regular posts, get content from post-content div
-    const postContentMatch = content.match(/<div class="post-content">([\s\S]*?)<\/div>/);
-    if (postContentMatch) {
-      metadata.content = postContentMatch[1].trim();
+    // For notes, get content from post-content div
+    const match = content.match(/<div class="post-content">([\s\S]*?)<\/div>\s*<footer/);
+    if (match) {
+      metadata.content = match[1].trim();
     }
   }
 
-  // Set default values
-  const now = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  console.log('Extracted metadata:', {
+    title: metadata.title,
+    contentLength: metadata.content ? metadata.content.length : 0,
+    section: metadata.section
   });
-  metadata.created = metadata.created || now;
-  metadata.updated = metadata.updated || metadata.created || now;
-  metadata.section = metadata.section || 'Uncategorized';
-  metadata.type = metadata.type || 'post';
-  metadata.content = metadata.content || '';
 
-  console.log('Final metadata:', metadata);
   return metadata;
 }
 
