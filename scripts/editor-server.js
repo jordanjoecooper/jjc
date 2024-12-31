@@ -50,9 +50,9 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       <p class="post-description">${metadata.description}</p>
       <div class="post-metadata-header">
         <span>${metadata.section || 'NOTES'}</span>
-        <span>•</span>
+        <span class="separator">•</span>
         <span>Jordan Joe Cooper</span>
-        <span>•</span>
+        <span class="separator">•</span>
         <time>${metadata.created}</time>
       </div>
     </header>
@@ -121,10 +121,6 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       <h1>${metadata.title}</h1>
       <p class="post-description">${metadata.description}</p>
       <div class="post-metadata-header">
-        <span>Library</span>
-        <span>•</span>
-        <span>Jordan Joe Cooper</span>
-        <span>•</span>
         <time>${metadata.created}</time>
       </div>
     </header>
@@ -132,7 +128,9 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
     <main>
       <div class="book-cover-container">
         <img src="../images/books/${metadata.id}.jpg" alt="Cover of ${metadata.title}" class="book-cover-image">
-        <h2 class="book-author">by ${metadata.author}${metadata.year ? ` (${metadata.year})` : ''}</h2>
+        <div class="book-info">
+          <div class="book-author">by ${metadata.author}${metadata.year ? ` (${metadata.year})` : ''}</div>
+        </div>
       </div>
 
       <div class="book-content">
@@ -140,6 +138,13 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       </div>
 
       <footer class="post-footer">
+        <div class="post-metadata">
+          <div class="post-metadata-footer">
+            <span>LIBRARY</span>
+            <span class="separator">•</span>
+            <span>JORDAN JOE COOPER</span>
+          </div>
+        </div>
         <div class="post-tags">
           ${metadata.tags.split(',').map(tag =>
             `<span class="post-tag">${tag.trim()}</span>`
@@ -702,8 +707,16 @@ function parsePostMetadata(content) {
   return metadata;
 }
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Editor server running at http://localhost:${port}`);
-  console.log(`Visit http://localhost:${port}/editor.html to create new posts`);
-});
+// Export the templates
+module.exports = {
+  postTemplate,
+  libraryTemplate
+};
+
+// Only start the server if this file is being run directly
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Editor server running at http://localhost:${port}`);
+    console.log(`Visit http://localhost:${port}/editor.html to create new posts`);
+  });
+}

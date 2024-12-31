@@ -382,6 +382,17 @@ nav {
   color: var(--secondary-text-color);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.post-metadata-header span {
+  display: flex;
+  align-items: center;
+}
+
+.post-metadata-header span.separator {
+  color: var(--border-color);
 }
 
 .post-metadata-header a {
@@ -432,23 +443,45 @@ nav {
   border-top: 1px solid var(--border-color);
 }
 
-.post-tags {
+.post-metadata {
+  margin-bottom: 1.5rem;
+}
+
+.book-metadata {
   display: flex;
   gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  color: var(--secondary-text-color);
+}
+
+.book-metadata .book-author {
+  font-family: var(--primary-font);
+  font-size: 1.2rem;
+}
+
+.book-metadata .book-type {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  background-color: #F3F4F6;
+  border-radius: 9999px;
+}
+
+.post-tags {
+  display: flex;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .post-tag {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  margin: 0.25rem;
   background-color: #F3F4F6;
   border-radius: 9999px;
   color: var(--secondary-text-color);
   font-size: 0.875rem;
   line-height: 1.25rem;
-  cursor: default;
 }
 
 .post-time {
@@ -556,7 +589,7 @@ nav {
 
 .note-row {
   display: block;
-  padding: 0.75rem;
+  padding: 1rem;
   border-radius: 4px;
   text-decoration: none;
   color: var(--text-color);
@@ -564,20 +597,21 @@ nav {
 }
 
 .note-row:hover {
-  background-color: #f3f4f6;
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 .note-row .note-header {
   display: flex;
   gap: 1.5rem;
   align-items: baseline;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .note-row time {
   font-size: 0.875rem;
   color: var(--secondary-text-color);
   min-width: 8.5rem;
+  flex-shrink: 0;
 }
 
 .note-row h3 {
@@ -595,18 +629,39 @@ nav {
   line-height: 1.5;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .note-row {
+    padding: 1rem 0;
+  }
+
   .note-row .note-header {
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
   }
 
   .note-row time {
     min-width: auto;
+    font-size: 0.8125rem;
+  }
+
+  .note-row h3 {
+    font-size: 1.125rem;
+    line-height: 1.4;
   }
 
   .note-row p {
-    margin-left: 0;
+    margin: 0.5rem 0 0 0;
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .note-row time {
+    min-width: 7rem;
+  }
+
+  .note-row p {
+    margin-left: 8.5rem;
   }
 }
 
@@ -636,4 +691,99 @@ nav {
   margin-left: auto;
   margin-right: auto;
   padding: 0 var(--spacing-unit);
+}
+
+.note-row {
+  display: block;
+  padding: 1rem 0;
+  text-decoration: none;
+  color: var(--text-color);
+  transition: background-color 0.2s ease;
+}
+
+.note-row:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.note-row .note-header {
+  display: flex;
+  gap: 1.5rem;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.note-row time {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+  min-width: 8.5rem;
+  flex-shrink: 0;
+}
+
+.note-row h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  color: var(--text-color);
+  font-family: var(--body-font);
+}
+
+.note-row p {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+  margin: 0.25rem 0 0 10rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .note-row {
+    padding: 1rem 0;
+  }
+
+  .note-row .note-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .note-row time {
+    min-width: auto;
+    font-size: 0.8125rem;
+  }
+
+  .note-row h3 {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+
+  .note-row p {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.875rem;
+  }
+}
+
+.post-metadata-footer {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 1.5rem 0;
+  font-family: var(--body-font);
+  font-size: 0.9rem;
+  color: var(--secondary-text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.post-metadata-footer .separator {
+  color: var(--border-color);
+}
+
+@media (max-width: 480px) {
+  .post-metadata-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .post-metadata-footer .separator {
+    display: none;
+  }
 }

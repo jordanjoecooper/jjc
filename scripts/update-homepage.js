@@ -2,43 +2,74 @@ const fs = require('fs');
 const path = require('path');
 const { generateSitemap } = require('./update-sitemap.js');
 
+// Import the library template from editor-server.js
+const { libraryTemplate } = require('./editor-server.js');
+
 async function updateHomepage() {
-  const libraryItems = [];
   const notes = [];
 
-  // Read library items
-  const libraryDir = path.join(process.cwd(), 'library');
+  // Process library items
+  const libraryDir = path.join(__dirname, '..', 'library');
   console.log('Looking for library items in:', libraryDir);
-  if (fs.existsSync(libraryDir)) {
-    const libraryFiles = fs.readdirSync(libraryDir);
-    console.log('Found library files:', libraryFiles);
-    for (const file of libraryFiles) {
-      if (file.endsWith('.html')) {
-        console.log('\nProcessing library file:', file);
-        const content = fs.readFileSync(path.join(libraryDir, file), 'utf8');
-        const metadata = extractMetadata(content);
-        console.log('Extracted metadata:', metadata);
-        if (metadata.title) {
-          // Check which image extension exists
-          const baseName = file.replace('.html', '');
-          const jpgPath = path.join(process.cwd(), 'images', 'books', `${baseName}.jpg`);
-          const pngPath = path.join(process.cwd(), 'images', 'books', `${baseName}.png`);
-          const imageExt = fs.existsSync(jpgPath) ? 'jpg' : fs.existsSync(pngPath) ? 'png' : 'jpg';
 
-          const item = {
-            ...metadata,
-            file,
-            cover: metadata.type === 'book' ? `images/books/${baseName}.${imageExt}` : null
-          };
-          console.log('Created library item:', item);
-          libraryItems.push(item);
-        } else {
-          console.log('Skipping file - no title found');
-        }
-      }
-    }
-  } else {
-    console.log('Library directory not found');
+  let libraryItems = [];
+  if (fs.existsSync(libraryDir)) {
+    const libraryFiles = fs.readdirSync(libraryDir)
+      .filter(file => file.endsWith('.html'));
+    console.log('Found library files:', libraryFiles);
+
+    libraryItems = libraryFiles.map(file => {
+      console.log('\nProcessing library file:', file);
+
+      // Read the file content
+      const content = fs.readFileSync(path.join(libraryDir, file), 'utf8');
+      console.log('\nExtracting metadata from content...');
+
+      // Extract metadata from HTML comments
+      const rawMetadata = {
+        title: content.match(/<!--\s*Title:\s*(.*?)\s*-->/)?.[1],
+        date: content.match(/<!--\s*Created:\s*(.*?)\s*-->/)?.[1],
+        description: content.match(/<!--\s*Description:\s*(.*?)\s*-->/)?.[1],
+        author: content.match(/<!--\s*Author:\s*(.*?)\s*-->/)?.[1],
+        type: 'book',
+        tags: content.match(/<!--\s*Tags:\s*(.*?)\s*-->/)?.[1]
+      };
+      console.log('Extracted raw metadata:', rawMetadata);
+
+      // Extract content from book-content div
+      const contentMatch = content.match(/<div class="book-content">([\s\S]*?)<\/div>/);
+      const bookContent = contentMatch ? contentMatch[1].trim() : '';
+
+      // Create metadata object
+      const metadata = {
+        ...rawMetadata,
+        content: bookContent,
+        id: file.replace('.html', ''),
+        created: rawMetadata.date,
+        updated: rawMetadata.date
+      };
+      console.log('Extracted metadata:', metadata);
+
+      // Generate new file content using the template
+      const newContent = libraryTemplate(metadata);
+
+      // Write the updated file
+      fs.writeFileSync(path.join(libraryDir, file), newContent);
+
+      // Create library item for homepage
+      const item = {
+        title: metadata.title || file.replace('.html', '').replace(/-/g, ' '),
+        date: metadata.date,
+        description: metadata.description || '',
+        author: metadata.author,
+        type: 'book',
+        tags: metadata.tags || '',
+        file,
+        cover: `images/books/${file.replace('.html', '.jpg')}`
+      };
+      console.log('Created library item:', item);
+      return item;
+    });
   }
   console.log('\nTotal library items:', libraryItems.length);
   console.log('Library items:', libraryItems);
@@ -79,8 +110,8 @@ async function updateHomepage() {
   // Replace notes section
   const notesContent = generateNotesGrid(notes);
   html = html.replace(
-    /<div class="notes-list">[\s\S]*?<\/div>/,
-    `<div class="notes-list">${notesContent}</div>`
+    /<!-- Notes will be dynamically inserted here -->/,
+    notesContent
   );
 
   // Remove articles section for now
@@ -97,71 +128,19 @@ async function updateHomepage() {
 }
 
 function extractMetadata(content) {
-  console.log('\nExtracting metadata from content...');
+  console.log('Extracting metadata from content...');
   const metadata = {
-    title: extractValue(content, 'Title') || extractTitleFromH1(content) || extractMetaContent(content, 'og:title'),
-    date: extractValue(content, 'Created') || extractValue(content, 'Date') || extractDateFromTime(content),
-    description: extractValue(content, 'Description') || extractMetaContent(content, 'description'),
-    author: extractValue(content, 'Author') || 'Jordan Joe Cooper',
-    type: extractValue(content, 'Type'),
-    tags: extractValue(content, 'Tags') || '',
+    title: content.match(/<!--\s*Title:\s*(.*?)\s*-->/)?.[1],
+    created: content.match(/<!--\s*Created:\s*(.*?)\s*-->/)?.[1],
+    updated: content.match(/<!--\s*Updated:\s*(.*?)\s*-->/)?.[1],
+    description: content.match(/<!--\s*Description:\s*(.*?)\s*-->/)?.[1],
+    section: content.match(/<!--\s*Section:\s*(.*?)\s*-->/)?.[1],
+    tags: content.match(/<!--\s*Tags:\s*(.*?)\s*-->/)?.[1],
+    type: content.match(/<!--\s*Type:\s*(.*?)\s*-->/)?.[1],
+    author: content.match(/<!--\s*Author:\s*(.*?)\s*-->/)?.[1]
   };
-
-  // If no type is found but there's an author, it's likely a book
-  if (!metadata.type && metadata.author !== 'Jordan Joe Cooper') {
-    metadata.type = 'book';
-  }
-
-  // Default to note if still no type
-  if (!metadata.type) {
-    metadata.type = 'note';
-  }
-
   console.log('Extracted raw metadata:', metadata);
-
-  // Clean up title if needed
-  if (metadata.title && metadata.title.endsWith(' - Jordan Joe Cooper')) {
-    metadata.title = metadata.title.replace(' - Jordan Joe Cooper', '');
-  }
-
   return metadata;
-}
-
-function extractValue(content, key) {
-  // Try HTML comments first
-  const metaMatch = content.match(new RegExp(`<!--\\s*${key}:\\s*(.*?)\\s*-->`));
-  if (metaMatch) return metaMatch[1];
-
-  // Try meta tags next
-  const metaTagMatch = content.match(new RegExp(`<meta\\s+name="${key.toLowerCase()}"\\s+content="([^"]+)"`));
-  if (metaTagMatch) return metaTagMatch[1];
-
-  return '';
-}
-
-function extractTitleFromH1(content) {
-  const match = content.match(/<h1[^>]*>([^<]+)<\/h1>/);
-  return match ? match[1].trim() : '';
-}
-
-function extractDateFromTime(content) {
-  const matches = content.match(/<time[^>]*>([^<]+)<\/time>/g);
-  if (!matches) return '';
-
-  // Get the first time element that's not in a "Last updated" context
-  for (const timeTag of matches) {
-    if (!timeTag.includes('Last updated')) {
-      const match = timeTag.match(/>([^<]+)</);
-      return match ? match[1].trim() : '';
-    }
-  }
-  return '';
-}
-
-function extractMetaContent(content, name) {
-  const match = content.match(new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]+content=["']([^"']+)["']`)) ||
-                content.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["']${name}["']`));
-  return match ? match[1] : '';
 }
 
 function generateLibraryGrid(items) {
@@ -180,18 +159,22 @@ function generateLibraryGrid(items) {
 function generateNotesGrid(items) {
   if (items.length === 0) return '';
 
-  return items.map(item => `
-    <a href="posts/${item.file}" class="note-row">
+  return items.map(item => {
+    const date = item.created ? new Date(item.created) : new Date();
+    const formattedDate = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    return `<a href="posts/${item.file}" class="note-row">
       <div class="note-header">
-        <time>${new Date(item.date).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}</time>
+        <time>${formattedDate}</time>
         <h3>${item.title}</h3>
       </div>
       <p>${item.description || ''}</p>
-    </a>`).join('\n');
+    </a>`;
+  }).join('\n');
 }
 
 module.exports = { updateHomepage };
