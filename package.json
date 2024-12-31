@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "new-post": "node editor/new-post.js",
+    "new-post": "node scripts/new-post.js",
     "update-homepage": "node scripts/update-homepage.js",
     "update-sitemap": "node scripts/update-sitemap.js",
     "update-post-dates": "node scripts/update-post-dates.js",
     "fix-paths": "node scripts/fix-paths.js",
-    "editor": "node editor/editor-server.js"
+    "editor": "node scripts/editor-server.js"
   },
   "keywords": [],
   "author": "",

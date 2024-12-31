@@ -84,6 +84,7 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
 const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
 <!-- Description: ${metadata.description} -->
 <!-- Author: ${metadata.author} -->
+<!-- Year: ${metadata.year} -->
 <!-- Tags: ${metadata.tags} -->
 <!-- Updated: ${metadata.updated} -->
 <!-- Created: ${metadata.created} -->
@@ -131,7 +132,7 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
     <main>
       <div class="book-cover-container">
         <img src="../images/books/${metadata.id}.jpg" alt="Cover of ${metadata.title}" class="book-cover-image">
-        <h2 class="book-author">by ${metadata.author}</h2>
+        <h2 class="book-author">by ${metadata.author}${metadata.year ? ` (${metadata.year})` : ''}</h2>
       </div>
 
       <div class="book-content">
@@ -169,8 +170,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Log all requests
+app.use((req, res, next) => {
+  console.log('Request:', req.method, req.url);
+  next();
+});
+
 // Serve static files from the root directory
-app.use(express.static(path.join(__dirname, '..')));
+const staticPath = path.join(__dirname, '..');
+console.log('Serving static files from:', staticPath);
+app.use(express.static(staticPath));
 
 // Get all posts
 app.get('/api/posts', (req, res) => {
@@ -178,21 +187,34 @@ app.get('/api/posts', (req, res) => {
     const postsDir = path.join(__dirname, '..', 'posts');
     const libraryDir = path.join(__dirname, '..', 'library');
 
+    // Immediate test of library directory
+    console.log('\n=== TESTING LIBRARY ACCESS ===');
+    console.log('Library directory path:', libraryDir);
+    console.log('Library exists:', fs.existsSync(libraryDir));
+    if (fs.existsSync(libraryDir)) {
+      const files = fs.readdirSync(libraryDir);
+      console.log('Library contents:', files);
+    }
+    console.log('=== END LIBRARY TEST ===\n');
+
+    console.log('\n=== Starting API Request ===');
     console.log('Current directory:', __dirname);
     console.log('Posts directory:', postsDir);
     console.log('Library directory:', libraryDir);
 
     // Get posts
     let posts = [];
+    console.log('\n=== Processing Posts ===');
     if (fs.existsSync(postsDir)) {
       const postFiles = fs.readdirSync(postsDir)
         .filter(file => file.endsWith('.html') && file !== 'index.html');
       console.log('Found post files:', postFiles);
 
       posts = postFiles.map(file => {
+        console.log('\nProcessing post file:', file);
         const content = fs.readFileSync(path.join(postsDir, file), 'utf8');
         const metadata = parsePostMetadata(content);
-        return {
+        const post = {
           id: file.replace('.html', ''),
           ...metadata,
           date: metadata.created,
@@ -200,12 +222,24 @@ app.get('/api/posts', (req, res) => {
           type: 'note',
           path: `/posts/${file}`
         };
+        console.log('Created post:', {
+          id: post.id,
+          title: post.title,
+          created: post.created,
+          type: post.type
+        });
+        return post;
       });
+      console.log('\nProcessed all posts. Count:', posts.length);
+    } else {
+      console.log('Posts directory does not exist');
     }
 
     // Get library items
     let libraryItems = [];
-    console.log('Checking library directory:', libraryDir);
+    console.log('\n=== Processing Library Items ===');
+    console.log('Library directory path:', libraryDir);
+
     if (fs.existsSync(libraryDir)) {
       console.log('Library directory exists');
       const libraryFiles = fs.readdirSync(libraryDir)
@@ -214,64 +248,81 @@ app.get('/api/posts', (req, res) => {
 
       libraryItems = libraryFiles.map(file => {
         try {
+          console.log('\nProcessing library file:', file);
           const filePath = path.join(libraryDir, file);
-          console.log('Reading library file:', filePath);
-          const content = fs.readFileSync(filePath, 'utf8');
-          console.log('Successfully read library file content');
-          const metadata = parsePostMetadata(content);
-          console.log('Parsed library metadata:', metadata);
+          console.log('Reading from path:', filePath);
 
-          // Extract author from the content if not in metadata
-          let author = metadata.author;
-          if (!author) {
-            const authorMatch = content.match(/<h2[^>]*class="book-author"[^>]*>by\s+([^<]+)<\/h2>/);
-            if (authorMatch) {
-              author = authorMatch[1].trim();
-            }
-          }
+          const content = fs.readFileSync(filePath, 'utf8');
+          console.log('File content length:', content.length);
+
+          const metadata = parsePostMetadata(content);
+          console.log('Parsed metadata:', {
+            title: metadata.title,
+            created: metadata.created,
+            author: metadata.author,
+            type: metadata.type
+          });
 
           const item = {
             id: file.replace('.html', ''),
             title: metadata.title || file.replace('.html', '').replace(/-/g, ' '),
             date: metadata.created,
             created: metadata.created,
-            updated: metadata.updated || metadata.date,
+            updated: metadata.updated || metadata.created,
             description: metadata.description || '',
             section: 'Library',
             type: 'library',
-            author: author,
+            author: metadata.author,
             file,
-            path: `/library/${file}`
+            path: `/library/${file}`,  // Add leading slash back
+            content: metadata.content || ''
           };
-          console.log('Created library item:', item);
+          console.log('Created library item:', {
+            id: item.id,
+            title: item.title,
+            created: item.created,
+            type: item.type,
+            path: item.path
+          });
           return item;
         } catch (error) {
-          console.error('Error processing library file:', file, error);
+          console.error('Error processing library file:', file, '\nError:', error);
           return null;
         }
-      }).filter(item => item !== null); // Remove any failed items
+      }).filter(item => item !== null);
+
+      console.log('\nProcessed all library items. Count:', libraryItems.length);
+      console.log('Library items:', libraryItems.map(item => ({
+        id: item.id,
+        title: item.title,
+        created: item.created
+      })));
     } else {
-      console.log('Library directory does not exist');
+      console.error('Library directory does not exist at:', libraryDir);
     }
 
-    console.log('Posts found:', posts.length, posts.map(p => p.title));
-    console.log('Library items found:', libraryItems.length, libraryItems.map(l => l.title));
+    // Combine and sort items
+    console.log('\n=== Combining Items ===');
+    console.log('Posts count:', posts.length);
+    console.log('Library items count:', libraryItems.length);
 
-    // Combine all items
     const allItems = [...posts, ...libraryItems];
-    console.log('Total items before sort:', allItems.length);
+    console.log('Combined items count:', allItems.length);
 
-    // Sort by date
     const sortedItems = allItems.sort((a, b) => {
-      const dateA = new Date(b.date || b.created || '1970-01-01');
-      const dateB = new Date(a.date || a.created || '1970-01-01');
-      return dateA - dateB;
+      const dateA = new Date(a.created || '1970-01-01');
+      const dateB = new Date(b.created || '1970-01-01');
+      return dateB - dateA;
     });
 
-    console.log('Final items:', sortedItems.map(item => ({
+    console.log('\n=== Final Response ===');
+    console.log('Total items:', sortedItems.length);
+    console.log('Items:', sortedItems.map(item => ({
       id: item.id,
       type: item.type,
-      title: item.title
+      title: item.title,
+      created: item.created,
+      path: item.path
     })));
 
     res.json(sortedItems);
@@ -284,6 +335,9 @@ app.get('/api/posts', (req, res) => {
 // Get single post
 app.get('/api/posts/:id', (req, res) => {
   try {
+    console.log('\n=== Getting Single Post ===');
+    console.log('Requested ID:', req.params.id);
+
     // Try posts directory first
     let filePath = path.join(__dirname, '..', 'posts', `${req.params.id}.html`);
 
@@ -292,82 +346,77 @@ app.get('/api/posts/:id', (req, res) => {
       filePath = path.join(__dirname, '..', 'library', `${req.params.id}.html`);
     }
 
-    console.log('Reading file:', filePath);
+    console.log('Reading file from:', filePath);
+    if (!fs.existsSync(filePath)) {
+      console.error('File not found:', filePath);
+      return res.status(404).json({ error: 'File not found' });
+    }
+
     const content = fs.readFileSync(filePath, 'utf8');
+    console.log('File content length:', content.length);
+
     const metadata = parsePostMetadata(content);
     console.log('Parsed metadata:', metadata);
 
-    // Extract the main content - look for different possible patterns
+    // For library items, preserve the book cover container
+    if (filePath.includes('/library/')) {
+      const bookCoverMatch = content.match(/<div class="book-cover-container">([\s\S]*?)<\/div>/);
+      if (bookCoverMatch) {
+        metadata.bookCoverHtml = bookCoverMatch[0];
+      }
+    }
+
+    // Extract the main content
     let mainContent = '';
-
-    // Try to find content within main tags first
-    const mainMatch = content.match(/<main[^>]*>([\s\S]*?)<\/main>/);
-    if (mainMatch) {
-      console.log('Found main content within <main> tags');
-      mainContent = mainMatch[1];
-
-      // Remove the back button container if present
-      mainContent = mainContent.replace(/<div class="back-button-container">[\s\S]*?<\/div>/, '');
-
-      // If it's a library item, preserve both the book cover and content
-      if (filePath.includes('/library/')) {
-        console.log('Processing library item content');
-        const bookCoverMatch = mainContent.match(/<div class="book-cover-container">[\s\S]*?<\/div>/);
-        const bookContentMatch = mainContent.match(/<div class="book-content">([\s\S]*?)<\/div>/);
-
-        if (bookCoverMatch) {
-          metadata.bookCoverHtml = bookCoverMatch[0];
-        }
-        if (bookContentMatch) {
-          metadata.content = bookContentMatch[1];
-          mainContent = bookContentMatch[1];
-        }
+    if (filePath.includes('/library/')) {
+      console.log('Extracting library content');
+      const bookContentStart = '<div class="book-content">';
+      const bookContentEnd = '<footer class="post-footer">';
+      const startIndex = content.indexOf(bookContentStart);
+      const endIndex = content.indexOf(bookContentEnd);
+      if (startIndex !== -1 && endIndex !== -1) {
+        // Get everything between book-content div start and footer
+        mainContent = content.substring(startIndex + bookContentStart.length, endIndex).trim();
+        console.log('Found book content:', mainContent);
       } else {
-        // For regular posts, just get the content div
-        const contentMatch = mainContent.match(/<div class="post-content">([\s\S]*?)<\/div>/);
-        if (contentMatch) {
-          mainContent = contentMatch[1];
-        }
+        console.log('No book content found');
       }
     } else {
-      console.log('No main tags found, looking for body content');
-      // Fallback to looking for content in body
-      const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/);
-      if (bodyMatch) {
-        mainContent = bodyMatch[1];
-        // Remove header and back button if present
-        mainContent = mainContent
-          .replace(/<header[^>]*>[\s\S]*?<\/header>/, '')
-          .replace(/<div class="back-button-container">[\s\S]*?<\/div>/, '');
+      console.log('Extracting post content');
+      const postContentMatch = content.match(/<div class="post-content">([\s\S]*?)<\/div>/);
+      if (postContentMatch) {
+        mainContent = postContentMatch[1].trim();
       }
     }
 
     console.log('Extracted content length:', mainContent.length);
-    console.log('Content preview:', mainContent.substring(0, 200) + '...');
+    console.log('Full extracted content:', mainContent);
 
-    // For library items, include both the book cover HTML and content
     const response = {
       id: req.params.id,
       ...metadata,
-      content: mainContent.trim(),
-      type: filePath.includes('/library/') ? 'library' : 'post'
+      content: mainContent,
+      type: filePath.includes('/library/') ? 'library' : 'note'
     };
 
-    if (filePath.includes('/library/')) {
-      response.bookCoverHtml = metadata.bookCoverHtml;
-    }
+    console.log('Sending response:', {
+      id: response.id,
+      title: response.title,
+      type: response.type,
+      contentLength: response.content.length
+    });
 
     res.json(response);
   } catch (error) {
     console.error('Error getting item:', error);
-    res.status(500).json({ error: 'Failed to get item' });
+    res.status(500).json({ error: 'Failed to get item', details: error.message });
   }
 });
 
 // Create a new post
-app.post('/api/posts', upload.none(), (req, res) => {
+app.post('/api/posts', upload.single('bookCover'), async (req, res) => {
   try {
-    const { title, content, description, tags, section } = req.body;
+    const { title, content, description, tags, section, author, year } = req.body;
 
     // Generate metadata
     const now = new Date().toLocaleDateString('en-US', {
@@ -384,7 +433,9 @@ app.post('/api/posts', upload.none(), (req, res) => {
       created: now,
       updated: now,
       content: content || '',
-      type: 'note'
+      type: section === 'Library' ? 'book' : 'note',
+      author: section === 'Library' ? author : undefined,
+      year: section === 'Library' ? year : undefined
     };
 
     // Generate filename from title
@@ -393,17 +444,49 @@ app.post('/api/posts', upload.none(), (req, res) => {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '') + '.html';
 
-    // Always save new posts to the posts directory
-    const targetDir = path.join(__dirname, '..', 'posts');
+    // Determine target directory based on section
+    const targetDir = path.join(__dirname, '..', section === 'Library' ? 'library' : 'posts');
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    // Generate HTML content using template
-    const htmlContent = postTemplate(metadata);
+    // If it's a library item and has a book cover, process the image
+    if (section === 'Library' && req.file) {
+      const sharp = require('sharp');
+      const imagesDir = path.join(__dirname, '..', 'images', 'books');
+      if (!fs.existsSync(imagesDir)) {
+        fs.mkdirSync(imagesDir, { recursive: true });
+      }
+
+      const imageFilename = filename.replace('.html', '.jpg');
+      const imagePath = path.join(imagesDir, imageFilename);
+
+      // Process and save the image
+      await sharp(req.file.buffer)
+        .resize(400, 600, { fit: 'contain' })
+        .jpeg({ quality: 80 })
+        .toFile(imagePath);
+
+      console.log('Saved book cover to:', imagePath);
+    }
+
+    // Generate HTML content using appropriate template
+    const htmlContent = section === 'Library' ? libraryTemplate(metadata) : postTemplate(metadata);
 
     // Write file
-    fs.writeFileSync(path.join(targetDir, filename), htmlContent);
+    const filePath = path.join(targetDir, filename);
+    fs.writeFileSync(filePath, htmlContent);
+    console.log('Saved post to:', filePath);
+
+    // Update homepage
+    try {
+      console.log('Updating homepage...');
+      require('./update-homepage.js');
+      console.log('Homepage updated successfully');
+    } catch (error) {
+      console.error('Error updating homepage:', error);
+      // Don't fail the whole request if homepage update fails
+    }
 
     res.json({
       success: true,
@@ -508,6 +591,16 @@ app.put('/api/posts/:id', upload.none(), (req, res) => {
     const template = isLibrary ? libraryTemplate : postTemplate;
     fs.writeFileSync(filePath, template(metadata));
 
+    // Update homepage
+    try {
+      console.log('Updating homepage...');
+      require('./update-homepage.js');
+      console.log('Homepage updated successfully');
+    } catch (error) {
+      console.error('Error updating homepage:', error);
+      // Don't fail the whole request if homepage update fails
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating post:', error);
@@ -532,9 +625,44 @@ function parsePostMetadata(content) {
     tags: content.match(/<!--\s*Tags:\s*(.*?)\s*-->/s)?.[1],
     type: content.match(/<!--\s*Type:\s*(.*?)\s*-->/s)?.[1],
     author: content.match(/<!--\s*Author:\s*(.*?)\s*-->/s)?.[1],
-    bookCover: content.match(/<!--\s*Cover:\s*(.*?)\s*-->/s)?.[1]
+    year: content.match(/<!--\s*Year:\s*(.*?)\s*-->/s)?.[1]
   };
   console.log('Extracted metadata from comments:', metadata);
+
+  // Extract content based on type
+  if (content.includes('class="book-content"')) {
+    // For library items, get content from book-content div
+    const startTag = '<div class="book-content">';
+    const endTag = '</div>';
+    const startIndex = content.indexOf(startTag);
+    if (startIndex !== -1) {
+      let depth = 1;
+      let currentIndex = startIndex + startTag.length;
+      while (depth > 0 && currentIndex < content.length) {
+        const nextClose = content.indexOf(endTag, currentIndex);
+        const nextOpen = content.indexOf('<div', currentIndex);
+
+        if (nextClose === -1) break;
+
+        if (nextOpen === -1 || nextClose < nextOpen) {
+          depth--;
+          currentIndex = nextClose + endTag.length;
+        } else {
+          depth++;
+          currentIndex = nextOpen + 4;
+        }
+      }
+      if (depth === 0) {
+        metadata.content = content.substring(startIndex + startTag.length, currentIndex - endTag.length).trim();
+      }
+    }
+  } else {
+    // For regular posts, get content from post-content div
+    const postContentMatch = content.match(/<div class="post-content">([\s\S]*?)<\/div>/);
+    if (postContentMatch) {
+      metadata.content = postContentMatch[1].trim();
+    }
+  }
 
   // Set default values
   const now = new Date().toLocaleDateString('en-US', {
@@ -546,6 +674,7 @@ function parsePostMetadata(content) {
   metadata.updated = metadata.updated || metadata.created || now;
   metadata.section = metadata.section || 'Uncategorized';
   metadata.type = metadata.type || 'post';
+  metadata.content = metadata.content || '';
 
   console.log('Final metadata:', metadata);
   return metadata;
@@ -554,5 +683,5 @@ function parsePostMetadata(content) {
 // Start the server
 app.listen(port, () => {
   console.log(`Editor server running at http://localhost:${port}`);
-  console.log(`Visit http://localhost:${port}/editor/editor.html to create new posts`);
+  console.log(`Visit http://localhost:${port}/editor.html to create new posts`);
 });
