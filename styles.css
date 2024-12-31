@@ -150,7 +150,23 @@ nav {
   font-size: 2rem;
   font-weight: 600;
   text-decoration: none;
-  color: inherit;
+  color: var(--text-color);
+  background: var(--background-color);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: 2px solid var(--text-color);
+}
+
+.logo:hover {
+  background: var(--text-color);
+  color: var(--background-color);
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow);
 }
 
 .nav-links {
@@ -498,7 +514,6 @@ header {
 }
 
 .back-button::before {
-  content: "←";
   font-size: 1.2rem;
 }
 
