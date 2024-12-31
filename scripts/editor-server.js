@@ -138,7 +138,7 @@ function libraryTemplate(metadata) {
     <main>
       <div class="book-cover-container">
         <img src="../images/books/${metadata.id}${coverImage}" alt="Cover of ${metadata.title}" class="book-cover-image">
-        <h2 class="book-author">by ${metadata.author}</h2>
+        <h2 class="book-author">${metadata.author}</h2>
       </div>
 
       <div class="book-content">

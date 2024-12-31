@@ -318,7 +318,7 @@
         const updated = formatDate(item.updated || item.date);
         const section = item.section || 'Uncategorized';
         const type = item.type === 'library' ? 'Library' : 'Note';
-        const author = item.type === 'library' ? `by ${item.author}` : '';
+        const author = item.type === 'library' ? ` ${item.author}` : '';
 
         return `
           <div class="post-item" onclick="editPost('${item.id}')">

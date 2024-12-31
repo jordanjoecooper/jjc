@@ -102,8 +102,8 @@ async function updateHomepage() {
   // Replace library section
   const libraryContent = generateLibraryGrid(libraryItems);
   html = html.replace(
-    /<!-- Library items will be dynamically inserted here -->/,
-    libraryContent
+    /<div class="library-grid">[\s\S]*?<\/div>\s*<\/section>/,
+    `<div class="library-grid">${libraryContent}</div>\n    </section>`
   );
 
   // Replace notes section
@@ -154,10 +154,8 @@ function generateLibraryGrid(items) {
     let foundFormat = null;
     for (const format of imageFormats) {
       const testPath = path.join(process.cwd(), baseImagePath + format);
-      console.log(`Testing ${item.file} with ${format}: ${testPath}`);
       if (fs.existsSync(testPath)) {
         foundFormat = format;
-        console.log(`Found format ${format} for ${item.file}`);
         break;
       }
     }
@@ -165,18 +163,14 @@ function generateLibraryGrid(items) {
     // If no format found, default to jpg
     if (!foundFormat) {
       foundFormat = '.jpg';
-      console.log(`No format found for ${item.file}, defaulting to jpg`);
     }
-
-    const finalPath = `${baseImagePath}${foundFormat}`;
-    console.log(`Final path for ${item.file}: ${finalPath}`);
 
     return `
     <a href="library/${item.file}" class="book">
-      <div class="book-cover" style="background-image: url('${finalPath}')"></div>
+      <div class="book-cover" style="background-image: url('${baseImagePath}${foundFormat}')"></div>
       <div class="book-info">
         <div class="book-title">${item.title}</div>
-        <div class="book-author">by ${item.author}</div>
+        <div class="book-author">${item.author}</div>
       </div>
     </a>`;
   }).join('\n');

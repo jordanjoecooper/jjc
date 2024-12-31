@@ -67,7 +67,7 @@ function updatePostDates() {
     const newHeader = `<header class="post-heading">
     <h1>${title}</h1>
     <div class="post-time">
-      <time>${createdDate}</time> by <a href="https://jordanjoecooper.dev">Jordan Joe Cooper</a>
+      <time>${createdDate}</time> <a href="https://jordanjoecooper.dev">Jordan Joe Cooper</a>
       <div class="post-metadata">
         Last updated: <time>${updatedDate}</time>
       </div>

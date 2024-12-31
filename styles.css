@@ -60,56 +60,41 @@ a:hover {
 
 /* Library Grid */
 .library-grid {
-  display: flex;
-  overflow-x: auto;
-  gap: 2rem;
-  padding: 2rem 0;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.library-grid::-webkit-scrollbar {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 1rem 0;
 }
 
 .book {
-  flex: 0 0 auto;
-  width: 280px;
   text-decoration: none;
   color: inherit;
-  scroll-snap-align: start;
   transition: transform 0.3s ease;
-}
-
-.book:hover {
-  transform: translateY(-5px);
 }
 
 .book-cover {
   width: 100%;
-  height: 400px;
+  aspect-ratio: 2/3;
   background-size: cover;
   background-position: center;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
 }
 
 .book-info {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .book-title {
-  font-family: 'Fraunces', serif;
-  font-size: 1.2rem;
+  font-family: var(--primary-font);
+  font-size: 1rem;
   font-weight: 500;
   margin-bottom: 0.25rem;
 }
 
 .book-author {
-  font-size: 1rem;
-  color: #666;
+  font-size: 0.9rem;
+  color: var(--secondary-text-color);
 }
 
 /* Section Headers */
@@ -872,5 +857,39 @@ header {
   #library {
     margin: 0 -1rem;
     padding: 0 1rem;
+  }
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1024px) {
+  .library-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .library-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .library-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    justify-items: center;
+  }
+
+  .book {
+    width: 280px;
+  }
+
+  .book-cover {
+    width: 100%;
+    aspect-ratio: 2/3;
+  }
+
+  .book-info {
+    text-align: center;
   }
 }
