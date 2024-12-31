@@ -79,8 +79,8 @@ async function updateHomepage() {
   // Replace notes section
   const notesContent = generateNotesGrid(notes);
   html = html.replace(
-    /<!-- Notes will be dynamically inserted here -->/,
-    notesContent
+    /<div class="notes-list">[\s\S]*?<\/div>/,
+    `<div class="notes-list">${notesContent}</div>`
   );
 
   // Remove articles section for now
