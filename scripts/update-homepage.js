@@ -8,21 +8,40 @@ async function updateHomepage() {
 
   // Read library items
   const libraryDir = path.join(process.cwd(), 'library');
+  console.log('Looking for library items in:', libraryDir);
   if (fs.existsSync(libraryDir)) {
     const libraryFiles = fs.readdirSync(libraryDir);
+    console.log('Found library files:', libraryFiles);
     for (const file of libraryFiles) {
       if (file.endsWith('.html')) {
+        console.log('\nProcessing library file:', file);
         const content = fs.readFileSync(path.join(libraryDir, file), 'utf8');
         const metadata = extractMetadata(content);
+        console.log('Extracted metadata:', metadata);
         if (metadata.title) {
-          libraryItems.push({
+          // Check which image extension exists
+          const baseName = file.replace('.html', '');
+          const jpgPath = path.join(process.cwd(), 'images', 'books', `${baseName}.jpg`);
+          const pngPath = path.join(process.cwd(), 'images', 'books', `${baseName}.png`);
+          const imageExt = fs.existsSync(jpgPath) ? 'jpg' : fs.existsSync(pngPath) ? 'png' : 'jpg';
+
+          const item = {
             ...metadata,
-            file: file
-          });
+            file,
+            cover: metadata.type === 'book' ? `images/books/${baseName}.${imageExt}` : null
+          };
+          console.log('Created library item:', item);
+          libraryItems.push(item);
+        } else {
+          console.log('Skipping file - no title found');
         }
       }
     }
+  } else {
+    console.log('Library directory not found');
   }
+  console.log('\nTotal library items:', libraryItems.length);
+  console.log('Library items:', libraryItems);
 
   // Read posts
   const postsDir = path.join(process.cwd(), 'posts');
@@ -51,9 +70,10 @@ async function updateHomepage() {
   let html = template;
 
   // Replace library section
+  const libraryContent = generateLibraryGrid(libraryItems);
   html = html.replace(
-    '<!-- Library items will be dynamically inserted here -->',
-    generateLibraryGrid(libraryItems)
+    /<div class="library-grid">[\s\S]*?<\/div>/,
+    `<div class="library-grid">${libraryContent}</div>`
   );
 
   // Replace notes section
@@ -81,24 +101,31 @@ async function updateHomepage() {
 }
 
 function extractMetadata(content) {
+  console.log('\nExtracting metadata from content...');
   const metadata = {
     title: extractValue(content, 'Title') || extractTitleFromH1(content) || extractMetaContent(content, 'og:title'),
-    date: extractValue(content, 'Date') || extractDateFromTime(content),
+    date: extractValue(content, 'Created') || extractValue(content, 'Date') || extractDateFromTime(content),
     description: extractValue(content, 'Description') || extractMetaContent(content, 'description'),
     author: extractValue(content, 'Author') || 'Jordan Joe Cooper',
-    type: extractValue(content, 'Type') || 'note',
+    type: extractValue(content, 'Type'),
     tags: extractValue(content, 'Tags') || '',
-    cover: extractValue(content, 'Cover') || extractValue(content, 'BookCover') || extractMetaContent(content, 'og:image')
   };
+
+  // If no type is found but there's an author, it's likely a book
+  if (!metadata.type && metadata.author !== 'Jordan Joe Cooper') {
+    metadata.type = 'book';
+  }
+
+  // Default to note if still no type
+  if (!metadata.type) {
+    metadata.type = 'note';
+  }
+
+  console.log('Extracted raw metadata:', metadata);
 
   // Clean up title if needed
   if (metadata.title && metadata.title.endsWith(' - Jordan Joe Cooper')) {
     metadata.title = metadata.title.replace(' - Jordan Joe Cooper', '');
-  }
-
-  // Clean up cover path
-  if (metadata.cover) {
-    metadata.cover = metadata.cover.replace('../', '').replace(/^\//, '');
   }
 
   return metadata;
@@ -149,7 +176,7 @@ function generateLibraryGrid(items) {
       <div class="book-cover" style="background-image: url('${item.cover}')"></div>
       <div class="book-info">
         <div class="book-title">${item.title}</div>
-        <div class="book-author">${item.author}</div>
+        <div class="book-author">by ${item.author}</div>
       </div>
     </a>
   `).join('\n');

@@ -363,6 +363,8 @@ app.get('/api/posts/:id', (req, res) => {
       const bookCoverMatch = content.match(/<div class="book-cover-container">([\s\S]*?)<\/div>/);
       if (bookCoverMatch) {
         metadata.bookCoverHtml = bookCoverMatch[0];
+        // Set the image path directly based on the id
+        metadata.bookCoverPath = `/images/books/${req.params.id}.jpg`;
       }
     }
 
@@ -390,7 +392,6 @@ app.get('/api/posts/:id', (req, res) => {
     }
 
     console.log('Extracted content length:', mainContent.length);
-    console.log('Full extracted content:', mainContent);
 
     const response = {
       id: req.params.id,

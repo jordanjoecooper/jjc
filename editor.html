@@ -393,7 +393,10 @@
           document.getElementById('author').value = post.author || '';
           document.getElementById('year').value = post.year || '';
           document.getElementById('section').value = 'Library';
-          if (post.bookCoverHtml) {
+          if (post.bookCoverPath) {
+            document.getElementById('bookCoverPreview').src = post.bookCoverPath;
+            document.getElementById('bookCoverPreview').style.display = 'block';
+          } else if (post.bookCoverHtml) {
             const bookCoverMatch = post.bookCoverHtml.match(/src="([^"]+)"/);
             if (bookCoverMatch) {
               document.getElementById('bookCoverPreview').src = bookCoverMatch[1];
