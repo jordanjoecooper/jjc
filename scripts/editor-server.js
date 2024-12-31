@@ -10,7 +10,11 @@ const port = 3000;
 const upload = multer();
 
 // Post templates
-const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
+const postTemplate = (metadata) => {
+  const tags = metadata.tags ? metadata.tags.split(',').map(tag => tag.trim()) : [];
+  const tagsHtml = tags.map(tag => `<span class="post-tag">${tag}</span>`).join('\n');
+
+  return `<!-- Title: ${metadata.title} -->
 <!-- Description: ${metadata.description} -->
 <!-- Section: ${metadata.section || 'Notes'} -->
 <!-- Tags: ${metadata.tags} -->
@@ -48,13 +52,7 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
     <header class="post-heading">
       <h1>${metadata.title}</h1>
       <p class="post-description">${metadata.description}</p>
-      <div class="post-metadata-header">
-        <span>${metadata.section || 'NOTES'}</span>
-        <span class="separator">•</span>
-        <span>Jordan Joe Cooper</span>
-        <span class="separator">•</span>
-        <time>${metadata.created}</time>
-      </div>
+      <time>${metadata.created}</time>
     </header>
 
     <main>
@@ -63,10 +61,13 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
       </div>
 
       <footer class="post-footer">
+        <div class="post-metadata-footer">
+          <span>${metadata.section || 'Notes'}</span>
+          <span>•</span>
+          <span>Jordan Joe Cooper</span>
+        </div>
         <div class="post-tags">
-          ${metadata.tags.split(',').map(tag =>
-            `<span class="post-tag">${tag.trim()}</span>`
-          ).join('\n          ')}
+          ${tagsHtml}
         </div>
         <div class="post-time">
           Last updated: <time>${metadata.updated}</time>
@@ -80,15 +81,26 @@ const postTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
   </div>
 </body>
 </html>`;
+};
 
-const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
+function libraryTemplate(metadata) {
+  const tags = metadata.tags ? metadata.tags.split(',').map(tag => tag.trim()) : [];
+  const tagsHtml = tags.map(tag => `<span class="post-tag">${tag}</span>`).join('\n');
+
+  // Check for supported image formats
+  const imageFormats = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+  const coverImage = imageFormats.find(format =>
+    fs.existsSync(path.join(__dirname, '..', 'images', 'books', metadata.id + format))
+  ) || '.jpg'; // Default to jpg if no other format found
+
+  return `<!-- Title: ${metadata.title} -->
 <!-- Description: ${metadata.description} -->
 <!-- Author: ${metadata.author} -->
 <!-- Year: ${metadata.year} -->
 <!-- Tags: ${metadata.tags} -->
 <!-- Updated: ${metadata.updated} -->
 <!-- Created: ${metadata.created} -->
-<!-- Type: book -->
+<!-- Type: ${metadata.type} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,35 +132,27 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
     <header class="post-heading">
       <h1>${metadata.title}</h1>
       <p class="post-description">${metadata.description}</p>
-      <div class="post-metadata-header">
-        <time>${metadata.created}</time>
-      </div>
+      <time>${metadata.created}</time>
     </header>
 
     <main>
       <div class="book-cover-container">
-        <img src="../images/books/${metadata.id}.jpg" alt="Cover of ${metadata.title}" class="book-cover-image">
-        <div class="book-info">
-          <div class="book-author">by ${metadata.author}${metadata.year ? ` (${metadata.year})` : ''}</div>
-        </div>
+        <img src="../images/books/${metadata.id}${coverImage}" alt="Cover of ${metadata.title}" class="book-cover-image">
+        <h2 class="book-author">by ${metadata.author}</h2>
       </div>
 
       <div class="book-content">
-        ${metadata.content || ''}
+        ${metadata.content}
       </div>
 
       <footer class="post-footer">
-        <div class="post-metadata">
-          <div class="post-metadata-footer">
-            <span>LIBRARY</span>
-            <span class="separator">•</span>
-            <span>JORDAN JOE COOPER</span>
-          </div>
+        <div class="post-metadata-footer">
+          <span>Library</span>
+          <span>•</span>
+          <span>Jordan Joe Cooper</span>
         </div>
         <div class="post-tags">
-          ${metadata.tags.split(',').map(tag =>
-            `<span class="post-tag">${tag.trim()}</span>`
-          ).join('\n          ')}
+          ${tagsHtml}
         </div>
         <div class="post-time">
           Last updated: <time>${metadata.updated}</time>
@@ -162,6 +166,7 @@ const libraryTemplate = (metadata) => `<!-- Title: ${metadata.title} -->
   </div>
 </body>
 </html>`;
+}
 
 // Enable CORS and JSON parsing
 app.use(express.json());
@@ -579,7 +584,8 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
       tags: tags || '',
       created: originalMetadata.created || now,
       updated: now,
-      type: isLibrary ? 'library' : 'note',
+      content: content || '',
+      type: isLibrary ? 'book' : 'note',
       id: req.params.id,
       author: isLibrary ? author : undefined,
       year: isLibrary ? year : undefined
@@ -605,23 +611,15 @@ app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
       console.log('Saved book cover to:', imagePath);
     }
 
-    // For library items, we need to handle the content differently
-    if (isLibrary) {
-      metadata.author = author || originalMetadata.author;
-      // Remove any existing book cover container from the content
-      metadata.content = content.replace(/<div class="book-cover-container">[\s\S]*?<\/div>/, '').trim();
-    } else {
-      metadata.content = content;
-    }
-
     // Use the appropriate template
     const template = isLibrary ? libraryTemplate : postTemplate;
-    fs.writeFileSync(filePath, template(metadata));
+    const newContent = template(metadata);
+    fs.writeFileSync(filePath, newContent);
 
     // Update homepage
     try {
       console.log('Updating homepage...');
-      require('./update-homepage.js');
+      require('./update-homepage.js').updateHomepage();
       console.log('Homepage updated successfully');
     } catch (error) {
       console.error('Error updating homepage:', error);

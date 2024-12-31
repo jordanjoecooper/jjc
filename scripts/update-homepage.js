@@ -64,8 +64,7 @@ async function updateHomepage() {
         author: metadata.author,
         type: 'book',
         tags: metadata.tags || '',
-        file,
-        cover: `images/books/${file.replace('.html', '.jpg')}`
+        file
       };
       console.log('Created library item:', item);
       return item;
@@ -146,14 +145,41 @@ function extractMetadata(content) {
 function generateLibraryGrid(items) {
   if (items.length === 0) return '';
 
-  return items.map(item => `
+  return items.map(item => {
+    // Find the image - try common formats
+    const imageFormats = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const baseImagePath = `images/books/${item.file.replace('.html', '')}`;
+
+    // Find which format exists
+    let foundFormat = null;
+    for (const format of imageFormats) {
+      const testPath = path.join(process.cwd(), baseImagePath + format);
+      console.log(`Testing ${item.file} with ${format}: ${testPath}`);
+      if (fs.existsSync(testPath)) {
+        foundFormat = format;
+        console.log(`Found format ${format} for ${item.file}`);
+        break;
+      }
+    }
+
+    // If no format found, default to jpg
+    if (!foundFormat) {
+      foundFormat = '.jpg';
+      console.log(`No format found for ${item.file}, defaulting to jpg`);
+    }
+
+    const finalPath = `${baseImagePath}${foundFormat}`;
+    console.log(`Final path for ${item.file}: ${finalPath}`);
+
+    return `
     <a href="library/${item.file}" class="book">
-      <div class="book-cover" style="background-image: url('${item.cover}')"></div>
+      <div class="book-cover" style="background-image: url('${finalPath}')"></div>
       <div class="book-info">
         <div class="book-title">${item.title}</div>
         <div class="book-author">by ${item.author}</div>
       </div>
-    </a>`).join('\n');
+    </a>`;
+  }).join('\n');
 }
 
 function generateNotesGrid(items) {
