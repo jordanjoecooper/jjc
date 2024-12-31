@@ -504,9 +504,9 @@ app.post('/api/posts', upload.single('bookCover'), async (req, res) => {
 });
 
 // Update an existing post
-app.put('/api/posts/:id', upload.none(), (req, res) => {
+app.put('/api/posts/:id', upload.single('bookCover'), async (req, res) => {
   try {
-    const { title, content, description, tags, section, type, author, bookCover } = req.body;
+    const { title, content, description, tags, section, author, year } = req.body;
     // Ensure the fileName has .html extension
     const fileName = req.params.id.endsWith('.html') ? req.params.id : `${req.params.id}.html`;
 
@@ -574,13 +574,34 @@ app.put('/api/posts/:id', upload.none(), (req, res) => {
       created: originalMetadata.created || now,
       updated: now,
       type: isLibrary ? 'library' : 'note',
-      id: req.params.id
+      id: req.params.id,
+      author: isLibrary ? author : undefined,
+      year: isLibrary ? year : undefined
     };
+
+    // If it's a library item and has a new book cover, process the image
+    if (isLibrary && req.file) {
+      const sharp = require('sharp');
+      const imagesDir = path.join(__dirname, '..', 'images', 'books');
+      if (!fs.existsSync(imagesDir)) {
+        fs.mkdirSync(imagesDir, { recursive: true });
+      }
+
+      const imageFilename = fileName.replace('.html', '.jpg');
+      const imagePath = path.join(imagesDir, imageFilename);
+
+      // Process and save the image
+      await sharp(req.file.buffer)
+        .resize(400, 600, { fit: 'contain' })
+        .jpeg({ quality: 80 })
+        .toFile(imagePath);
+
+      console.log('Saved book cover to:', imagePath);
+    }
 
     // For library items, we need to handle the content differently
     if (isLibrary) {
       metadata.author = author || originalMetadata.author;
-      metadata.bookCover = bookCover || originalMetadata.bookCover;
       // Remove any existing book cover container from the content
       metadata.content = content.replace(/<div class="book-cover-container">[\s\S]*?<\/div>/, '').trim();
     } else {
