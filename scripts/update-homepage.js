@@ -72,19 +72,15 @@ async function updateHomepage() {
   // Replace library section
   const libraryContent = generateLibraryGrid(libraryItems);
   html = html.replace(
-    /<div class="library-grid">[\s\S]*?<\/div>/,
-    `<div class="library-grid">${libraryContent}</div>`
+    /<!-- Library items will be dynamically inserted here -->/,
+    libraryContent
   );
 
   // Replace notes section
   const notesContent = generateNotesGrid(notes);
   html = html.replace(
-    /<section id="notes">[\s\S]*?<\/section>/,
-    `<section id="notes">
-      <h2 class="section-header">Notes</h2>
-      <p class="section-description">Quick jots, thoughts and observations.</p>
-      <div class="notes-grid">${notesContent}</div>
-    </section>`
+    /<!-- Notes will be dynamically inserted here -->/,
+    notesContent
   );
 
   // Remove articles section for now
@@ -178,26 +174,24 @@ function generateLibraryGrid(items) {
         <div class="book-title">${item.title}</div>
         <div class="book-author">by ${item.author}</div>
       </div>
-    </a>
-  `).join('\n');
+    </a>`).join('\n');
 }
 
 function generateNotesGrid(items) {
   if (items.length === 0) return '';
 
   return items.map(item => `
-    <a href="posts/${item.file}" class="note-card">
-      <h3>${item.title}</h3>
-      <p class="note-excerpt">${item.description || ''}</p>
-      <div class="meta">
+    <a href="posts/${item.file}" class="note-row">
+      <div class="note-header">
         <time>${new Date(item.date).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         })}</time>
+        <h3>${item.title}</h3>
       </div>
-    </a>
-  `).join('\n');
+      <p>${item.description || ''}</p>
+    </a>`).join('\n');
 }
 
 module.exports = { updateHomepage };
