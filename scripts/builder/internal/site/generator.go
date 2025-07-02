@@ -136,7 +136,9 @@ func (g *Generator) parseMarkdownFrontmatter(content string) (map[string]string,
 				parts := strings.SplitN(line, ":", 2)
 				if len(parts) == 2 {
 					key := strings.TrimSpace(parts[0])
-					value := strings.TrimSpace(strings.Trim(parts[1], `"'`))
+					value := strings.TrimSpace(parts[1])
+					// Remove leading/trailing quotes (single or double)
+					value = strings.Trim(value, `"'`)
 					metadata[key] = value
 				}
 			}

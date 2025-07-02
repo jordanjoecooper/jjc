@@ -893,3 +893,17 @@ header {
     text-align: center;
   }
 }
+
+/* Ensure post content and code blocks wrap and do not overflow */
+.post-content, .post-content p, .post-content pre, .post-content code, .post-content table {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.post-content pre, .post-content code {
+  white-space: pre-wrap;
+}
+.post-content table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
