@@ -9,6 +9,7 @@ Personal site built with Go, generating static HTML from markdown content. The s
 - **No Runtime Dependencies**: Single Go binary, no Node.js or other runtimes needed
 - **Automated Workflow**: Git hooks automatically rebuild and update the site on every commit/push
 - **Development Tools**: Simple scripts for common development tasks
+- **Library Management**: Book reviews and notes in markdown format
 
 ## Quick Start
 
@@ -52,6 +53,15 @@ git commit -m "Add new post"
 
 # Generate sitemap
 ./site -cmd update-sitemap
+
+# Update library
+./site -cmd update-library
+
+# Convert HTML to markdown
+./site -cmd convert-to-markdown
+
+# Start editor server (if implemented)
+./site -cmd editor -port 3000
 ```
 
 ## Development Helper
@@ -97,6 +107,10 @@ type: "note"
 Your content here...
 ```
 
+### Library Items
+
+Book reviews and notes are stored in `library/` as `.html` files (to be migrated to markdown).
+
 ### Generated Files
 
 - `index.html` - Homepage (auto-generated)
@@ -115,8 +129,37 @@ jjc/
 │   ├── migrate.sh            # Migration helper
 │   └── install-hooks.sh      # Git hooks installer
 ├── posts/*.md                # Markdown posts
+├── library/*.html            # Book reviews (to be migrated)
+├── images/                   # Static images and icons
+├── styles.css                # Site styles
+├── about.html                # About page
 ├── site                      # Go binary (generated)
-└── README-GO.md              # This documentation
+├── README-GO.md              # This documentation
+└── README.md                 # Original Node.js documentation
+```
+
+## Available Commands
+
+### Site Generator Commands
+```bash
+./site -cmd new-post -title "Title" -desc "Description" -tags "tags" -section "Notes"
+./site -cmd update-homepage
+./site -cmd update-sitemap
+./site -cmd update-library
+./site -cmd convert-to-markdown
+./site -cmd editor -port 3000
+```
+
+### Development Scripts
+```bash
+./scripts/build.sh            # Build everything
+./scripts/dev.sh build        # Build site
+./scripts/dev.sh new "Title"  # Create post
+./scripts/dev.sh serve        # Local server
+./scripts/dev.sh watch        # Auto-rebuild
+./scripts/dev.sh clean        # Clean up
+./scripts/migrate.sh          # Migration helper
+./scripts/install-hooks.sh    # Install git hooks
 ```
 
 ## Migration from Node.js
@@ -172,4 +215,35 @@ go build -o site cmd/site/main.go
 ./scripts/build.sh
 git add index.html sitemap.xml
 git commit -m "Force rebuild"
-``` 
+```
+
+### Permission Issues
+```bash
+# Make scripts executable
+chmod +x scripts/*.sh
+chmod +x site
+```
+
+### Go Module Issues
+```bash
+# Clean and reinstall dependencies
+go clean -modcache
+go mod tidy
+go build -o site cmd/site/main.go
+```
+
+### Content Not Appearing
+```bash
+# Check markdown syntax
+./site -cmd update-homepage
+# Verify frontmatter is correct
+# Check file permissions
+```
+
+## Next Steps
+
+- [ ] Migrate library items from HTML to markdown
+- [ ] Implement editor server functionality
+- [ ] Add image optimization
+- [ ] Add RSS feed generation
+- [ ] Add search functionality 
