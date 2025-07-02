@@ -269,6 +269,11 @@ func (g *Generator) UpdateHomepage() error {
 				return err
 			}
 
+			// Skip unpublished posts
+			if metadata["published"] == "false" {
+				return nil
+			}
+
 			post := &Post{
 				Title:       metadata["title"],
 				Description: metadata["description"],
@@ -288,6 +293,11 @@ func (g *Generator) UpdateHomepage() error {
 		return fmt.Errorf("failed to read posts: %w", err)
 	}
 
+	// Generate HTML files from markdown posts
+	if err := g.generatePostHTMLFiles(posts); err != nil {
+		return fmt.Errorf("failed to generate HTML files: %w", err)
+	}
+
 	// Sort posts by date (newest first)
 	// TODO: Implement proper date sorting
 
@@ -303,6 +313,30 @@ func (g *Generator) UpdateHomepage() error {
 	}
 
 	fmt.Printf("Homepage updated with %d posts\n", len(posts))
+	return nil
+}
+
+func (g *Generator) generatePostHTMLFiles(posts []*Post) error {
+	// Create posts HTML directory if it doesn't exist
+	postsHTMLDir := filepath.Join(g.rootDir, "posts")
+	if err := os.MkdirAll(postsHTMLDir, 0755); err != nil {
+		return fmt.Errorf("failed to create posts HTML directory: %w", err)
+	}
+
+	// Generate HTML for each post
+	for _, post := range posts {
+		htmlContent, err := g.generatePostHTML(post)
+		if err != nil {
+			return fmt.Errorf("failed to generate HTML for post %s: %w", post.Slug, err)
+		}
+
+		htmlPath := filepath.Join(postsHTMLDir, post.Slug+".html")
+		if err := os.WriteFile(htmlPath, []byte(htmlContent), 0644); err != nil {
+			return fmt.Errorf("failed to write HTML file for post %s: %w", post.Slug, err)
+		}
+	}
+
+	fmt.Printf("Generated HTML files for %d posts\n", len(posts))
 	return nil
 }
 
