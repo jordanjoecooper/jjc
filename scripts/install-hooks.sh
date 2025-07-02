@@ -7,35 +7,48 @@ SCRIPTS_DIR="scripts"
 cat > "${HOOKS_DIR}/pre-commit" << 'EOL'
 #!/bin/bash
 
-# Get the current date and time
-DATE=$(date '+%B %d, %Y at %H:%M')
+echo "🔄 Pre-commit: Rebuilding site..."
+./scripts/build.sh
 
-# Update the last updated timestamp in index.html
-sed -i '' "s/<div class=\"last-updated\">.*<\/div>/<div class=\"last-updated\">Last updated: ${DATE}<\/div>/" index.html
-
-# Update sitemap
-node scripts/update_sitemap.js
-
-# Stage the modified files
+# Stage all generated files
+echo "📝 Staging generated files..."
 git add index.html sitemap.xml
+
+echo "✅ Pre-commit hook completed"
 EOL
 
 # Create pre-push hook
 cat > "${HOOKS_DIR}/pre-push" << 'EOL'
 #!/bin/bash
 
-echo "Updating homepage with latest articles..."
-node scripts/update_homepage.js
+echo "🔄 Pre-push: Rebuilding site..."
+./scripts/build.sh
 
-# Stage and commit the changes if there are any
-if [[ -n $(git status -s) ]]; then
-    git add index.html
-    git commit -m "Update homepage with latest articles"
+# Stage generated files
+echo "📝 Staging generated files..."
+git add index.html sitemap.xml
+
+# Check if there are any changes to commit
+if [[ -n $(git status --porcelain) ]]; then
+    echo "📦 Committing generated files..."
+    git commit -m "Auto: rebuild site before push [$(date '+%Y-%m-%d %H:%M')]"
+    echo "✅ Auto-commit completed"
+else
+    echo "✅ No changes to commit"
 fi
+
+echo "✅ Pre-push hook completed"
 EOL
 
 # Make hooks executable
 chmod +x "${HOOKS_DIR}/pre-commit"
 chmod +x "${HOOKS_DIR}/pre-push"
 
-echo "Git hooks installed successfully!"
+echo "✅ Git hooks installed successfully!"
+echo ""
+echo "📋 Hook behavior:"
+echo "  • pre-commit: Rebuilds site and stages generated files"
+echo "  • pre-push: Rebuilds site, stages files, and auto-commits if needed"
+echo ""
+echo "🔄 To apply hooks to current repository:"
+echo "  ./scripts/install-hooks.sh"
