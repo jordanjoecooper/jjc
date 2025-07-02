@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"jjc/internal/site"
+	"jjc/scripts/builder/internal/site"
 )
 
 func main() {

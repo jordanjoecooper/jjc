@@ -13,7 +13,7 @@ case "$1" in
             exit 1
         fi
         echo "📝 Creating new post: $2"
-        ./site -cmd new-post -title "$2" -desc "Description for $2" -tags "tag1,tag2" -section "Notes"
+        ./scripts/builder/bin/site -cmd new-post -title "$2" -desc "Description for $2" -tags "tag1,tag2" -section "Notes"
         ;;
     "serve")
         echo "🌐 Starting local server on http://localhost:8000"
@@ -30,7 +30,7 @@ case "$1" in
         ;;
     "clean")
         echo "🧹 Cleaning up..."
-        rm -f site
+        rm -f scripts/builder/bin/site
         rm -f posts-md/*.md 2>/dev/null || true
         rmdir posts-md 2>/dev/null || true
         echo "✅ Cleanup completed"

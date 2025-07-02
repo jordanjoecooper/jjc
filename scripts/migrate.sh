@@ -4,7 +4,7 @@ echo "Starting migration from Node.js to Go..."
 
 # 1. Convert HTML posts to markdown
 echo "Step 1: Converting HTML posts to markdown..."
-./site -cmd convert-to-markdown
+./scripts/builder/bin/site -cmd convert-to-markdown
 
 # 2. Move markdown files to posts directory
 echo "Step 2: Moving markdown files..."

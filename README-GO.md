@@ -16,7 +16,7 @@ Personal site built with Go, generating static HTML from markdown content. The s
 1. **Install Go** (1.21 or later)
 2. **Build the site generator**:
    ```bash
-   go build -o site cmd/site/main.go
+   go build -o scripts/builder/bin/site scripts/builder/cmd/site/main.go
    ```
 3. **Install git hooks** (automates everything):
    ```bash
@@ -46,22 +46,22 @@ git commit -m "Add new post"
 ./scripts/build.sh
 
 # Create a new post
-./site -cmd new-post -title "Post Title" -desc "Description" -tags "tag1,tag2" -section "Notes"
+./scripts/builder/bin/site -cmd new-post -title "Post Title" -desc "Description" -tags "tag1,tag2" -section "Notes"
 
 # Update homepage
-./site -cmd update-homepage
+./scripts/builder/bin/site -cmd update-homepage
 
 # Generate sitemap
-./site -cmd update-sitemap
+./scripts/builder/bin/site -cmd update-sitemap
 
 # Update library
-./site -cmd update-library
+./scripts/builder/bin/site -cmd update-library
 
 # Convert HTML to markdown
-./site -cmd convert-to-markdown
+./scripts/builder/bin/site -cmd convert-to-markdown
 
 # Start editor server (if implemented)
-./site -cmd editor -port 3000
+./scripts/builder/bin/site -cmd editor -port 3000
 ```
 
 ## Development Helper
@@ -121,9 +121,11 @@ Book reviews and notes are stored in `library/` as `.html` files (to be migrated
 
 ```
 jjc/
-├── cmd/site/main.go          # Main CLI entry point
-├── internal/site/generator.go # Core site generation logic
 ├── scripts/
+│   ├── builder/
+│   │   ├── cmd/site/main.go  # Main CLI entry point
+│   │   ├── internal/site/generator.go # Core site generation logic
+│   │   └── bin/site          # Go binary (generated)
 │   ├── build.sh              # Unified build script
 │   ├── dev.sh                # Development helper
 │   ├── migrate.sh            # Migration helper
@@ -133,7 +135,8 @@ jjc/
 ├── images/                   # Static images and icons
 ├── styles.css                # Site styles
 ├── about.html                # About page
-├── site                      # Go binary (generated)
+├── go.mod                    # Go module file
+├── go.sum                    # Go dependencies
 ├── README-GO.md              # This documentation
 └── README.md                 # Original Node.js documentation
 ```
@@ -142,12 +145,12 @@ jjc/
 
 ### Site Generator Commands
 ```bash
-./site -cmd new-post -title "Title" -desc "Description" -tags "tags" -section "Notes"
-./site -cmd update-homepage
-./site -cmd update-sitemap
-./site -cmd update-library
-./site -cmd convert-to-markdown
-./site -cmd editor -port 3000
+./scripts/builder/bin/site -cmd new-post -title "Title" -desc "Description" -tags "tags" -section "Notes"
+./scripts/builder/bin/site -cmd update-homepage
+./scripts/builder/bin/site -cmd update-sitemap
+./scripts/builder/bin/site -cmd update-library
+./scripts/builder/bin/site -cmd convert-to-markdown
+./scripts/builder/bin/site -cmd editor -port 3000
 ```
 
 ### Development Scripts
@@ -199,7 +202,7 @@ The old Node.js scripts have been replaced with a single Go binary. To migrate:
 ```bash
 # Clean and rebuild
 ./scripts/dev.sh clean
-go build -o site cmd/site/main.go
+go build -o scripts/builder/bin/site scripts/builder/cmd/site/main.go
 ./scripts/build.sh
 ```
 
@@ -229,7 +232,7 @@ chmod +x site
 # Clean and reinstall dependencies
 go clean -modcache
 go mod tidy
-go build -o site cmd/site/main.go
+go build -o scripts/builder/bin/site scripts/builder/cmd/site/main.go
 ```
 
 ### Content Not Appearing
