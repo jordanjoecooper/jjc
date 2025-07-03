@@ -146,7 +146,6 @@ jjc/
 ./scripts/builder/bin/site -cmd update-sitemap
 ./scripts/builder/bin/site -cmd update-library
 ./scripts/builder/bin/site -cmd convert-to-markdown
-./scripts/builder/bin/site -cmd editor -port 3000
 ```
 
 ### Development Scripts
@@ -242,7 +241,6 @@ go build -o scripts/builder/bin/site scripts/builder/cmd/site/main.go
 ## Next Steps
 
 - [ ] Migrate library items from HTML to markdown
-- [ ] Implement editor server functionality
 - [ ] Add image optimization
 - [ ] Add RSS feed generation
 - [ ] Add search functionality 
