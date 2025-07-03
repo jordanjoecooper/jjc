@@ -60,10 +60,6 @@ git commit -m "Add new post"
 # Convert HTML to markdown
 ./scripts/builder/bin/site -cmd convert-to-markdown
 
-# Start editor server (if implemented)
-./scripts/builder/bin/site -cmd editor -port 3000
-```
-
 ## Development Helper
 
 Use `./scripts/dev.sh` for common tasks:

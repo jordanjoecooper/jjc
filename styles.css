@@ -124,27 +124,25 @@ a:hover {
 
 /* Navigation */
 nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4rem;
+  margin-bottom: 0;
 }
 
 .logo {
   font-family: 'Fraunces', serif;
-  font-size: 2rem;
+  font-size: 1.3rem;
   font-weight: 600;
   text-decoration: none;
   color: var(--text-color);
   background: var(--background-color);
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 8px;
   transition: all 0.2s ease;
   border: 2px solid var(--text-color);
+  margin: 0;
 }
 
 .logo:hover {
@@ -157,6 +155,7 @@ nav {
 .nav-links {
   display: flex;
   gap: 2rem;
+  margin: 0;
 }
 
 .nav-links a {
@@ -906,4 +905,36 @@ header {
   display: block;
   overflow-x: auto;
   max-width: 100%;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.75); /* semi-transparent white */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  border-bottom: 1px solid #eceff1; /* subtle divider line */
+  box-shadow: 0 2px 8px -4px rgba(0,0,0,0.03);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(8px)) or (backdrop-filter: blur(8px))) {
+  .navbar {
+    background: #fff; /* fallback solid color */
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }

@@ -609,8 +609,3 @@ func (g *Generator) htmlToMarkdown(html string) string {
 
 	return html
 }
-
-func (g *Generator) StartEditor(port int) error {
-	// TODO: Implement HTTP server for editor
-	return fmt.Errorf("editor not implemented yet")
-}
