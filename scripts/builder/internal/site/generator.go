@@ -104,6 +104,41 @@ type: "note"
 	return nil
 }
 
+func isProseBlock(content string) bool {
+	codeSymbols := []string{"{", "}", "(", ")", ";", "=", "<", ">", "[", "]", "#", "$", "%", "_", "*", "/", "\\"}
+	lines := strings.Split(content, "\n")
+	wordCount := 0
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		for _, sym := range codeSymbols {
+			if strings.Contains(trimmed, sym) {
+				return false
+			}
+		}
+		wordCount += len(strings.Fields(trimmed))
+	}
+	return wordCount > 5
+}
+
+func fixProsePreCodeBlocks(html string) string {
+	re := regexp.MustCompile(`(?s)<pre><code>(.*?)</code></pre>`)
+	return re.ReplaceAllStringFunc(html, func(match string) string {
+		inner := re.FindStringSubmatch(match)
+		if len(inner) < 2 {
+			return match
+		}
+		block := inner[1]
+		if isProseBlock(block) {
+			p := strings.ReplaceAll(strings.TrimSpace(block), "\n", "<br>")
+			return "<p>" + p + "</p>"
+		}
+		return match
+	})
+}
+
 func (g *Generator) markdownToHTML(mdContent string) (string, error) {
 	// Parse markdown
 	extensions := parser.CommonExtensions
@@ -116,7 +151,10 @@ func (g *Generator) markdownToHTML(mdContent string) (string, error) {
 	renderer := html.NewRenderer(opts)
 	html := markdown.Render(doc, renderer)
 
-	return string(html), nil
+	// Post-process to fix prose in <pre><code>...</code></pre>
+	fixedHTML := fixProsePreCodeBlocks(string(html))
+
+	return fixedHTML, nil
 }
 
 func (g *Generator) parseMarkdownFrontmatter(content string) (map[string]string, string, error) {
@@ -187,25 +225,25 @@ func (g *Generator) generatePostHTML(post *Post) (string, error) {
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-  <div class="container">
-    <nav>
-      <a href="../" class="logo">J</a>
+  <nav class="navbar">
+    <div class="container nav-content">
+      <a href="/" class="logo">J</a>
       <div class="nav-links">
+        <a href="/index.html#notes">Writing</a>
         <a href="../about.html">About</a>
       </div>
-    </nav>
-
+    </div>
+  </nav>
+  <div class="container">
     <header class="post-heading">
       <h1>{{.Title}}</h1>
       <p class="post-description">{{.Description}}</p>
       <time>{{.Created}}</time>
     </header>
-
     <main>
       <div class="post-content">
         {{.HTMLContent}}
       </div>
-
       <footer class="post-footer">
         <div class="post-metadata-footer">
           <span>{{.Section}}</span>
@@ -219,7 +257,6 @@ func (g *Generator) generatePostHTML(post *Post) (string, error) {
           Last updated: <time>{{.Updated}}</time>
         </div>
       </footer>
-
       <div class="back-button-container">
         <a href="../" class="back-button">Back to home</a>
       </div>
